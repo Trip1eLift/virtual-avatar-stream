@@ -33,3 +33,7 @@ cd client
 npm install
 npm start
 ```
+
+## Fargate deployment docs
+1. https://section411.com/2019/07/hello-world/
+2. https://engineering.finleap.com/posts/2020-02-20-ecs-fargate-terraform/
