@@ -12,6 +12,8 @@ def WS_Starts():
     def new_connection(client, server):
         print("New client has connected to the server")
         print(f"ID: {client['id']}, Address: {client['address']}")
+        #print(client['handler'].rfile.readline().decode().strip())
+        server.send_message(client, "Handshake")
         return
 
     def on_recieve(client, server, message):
