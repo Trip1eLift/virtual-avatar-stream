@@ -38,6 +38,11 @@ variable "container_port" {
   description = "exposing port number of the docker container"
 }
 
+variable "cloudwatch_group" {
+  type = string
+  description = "cloudwatch logging group name of ecs task"
+}
+
 variable "common_tags" {
 	type = map
 	description = "Common tags you want applied to all components."

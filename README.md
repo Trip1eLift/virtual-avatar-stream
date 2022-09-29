@@ -6,7 +6,7 @@ This is a PoC project to test how to deploy a scalable end-to-end streaming dist
 ## Python server docker run
 ```
 cd server
-docker build --tag websocket-server .; docker run -it -p 5001:5001 websocket-server (Powershell)
+docker build --tag virtual-avatar-stream .; docker run -it -p 5001:5001 virtual-avatar-stream
 ```
 
 ## Python server local run

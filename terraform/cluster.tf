@@ -4,7 +4,7 @@ resource "aws_ecs_cluster" "main" {
 }
 
 resource "aws_ecs_task_definition" "main" {
-	family                   = "service"
+	family                   = "${var.name}-${var.environment}-family"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = 256
@@ -21,6 +21,22 @@ resource "aws_ecs_task_definition" "main" {
 			containerPort = var.container_port
 			hostPort      = var.container_port
 		}]
+		# TODO: Need to handle event for health check
+		# healthCheck = {
+    #   retries = 10
+    #   command = [ "CMD-SHELL", "curl -f http://localhost:8081/actuator/liveness || exit 1" ]
+    #   timeout: 5
+    #   interval: 10
+    #   startPeriod: var.health_start_period
+    # }
+		logConfiguration = {
+      logDriver = "awslogs"
+      options   = {
+        awslogs-group         = var.cloudwatch_group # TODO: need to create cloudwatch group somewhere and reference it here
+        awslogs-region        = "us-east-1"
+        awslogs-stream-prefix = "ecs"
+      }
+    }
 	}])
 	tags = var.common_tags
 }
