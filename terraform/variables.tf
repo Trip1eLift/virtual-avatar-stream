@@ -8,14 +8,19 @@ variable "environment" {
   description = "environment of the deployment"
 }
 
-variable "cidr" {
+variable "vpc_cidr" {
   type = string
   description = "cidr block of vpc"
 }
 
-variable "public_subnets" {
-	type = string
-  description = ""
+variable "subnet_cidrs" {
+  type = list
+  description = "cidr block of subnet (list length shoud be the same as availability_zones)"
+}
+
+variable "availability_zones" {
+  type = list
+  description = "list of availability zones for subnet (list length shoud be the same as subnet_cidrs)"
 }
 
 variable "container_image" {
@@ -31,16 +36,6 @@ variable "container_environment" {
 variable "container_port" {
 	type = number
   description = "exposing port number of the docker container"
-}
-
-variable "ecs_service_security_groups" {
-	type = string
-  description = ""
-}
-
-variable "subnets" {
-	type = string
-  description = ""
 }
 
 variable "common_tags" {

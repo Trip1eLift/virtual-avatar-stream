@@ -1,21 +1,25 @@
 resource "aws_vpc" "main" {
-  cidr_block = var.cidr
+  cidr_block = var.vpc_cidr
+  tags       = var.common_tags
 }
 
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
+  tags   = var.common_tags
 }
 
 resource "aws_subnet" "public" {
   vpc_id                  = aws_vpc.main.id
-  cidr_block              = element(var.public_subnets, count.index)
+  cidr_block              = element(var.subnet_cidrs, count.index)
   availability_zone       = element(var.availability_zones, count.index)
-  count                   = length(var.public_subnets)
+  count                   = length(var.subnet_cidrs)
   map_public_ip_on_launch = true
+  tags                    = var.common_tags
 }
 
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
+  tags   = var.common_tags
 }
 
 resource "aws_route" "public" {
@@ -25,13 +29,13 @@ resource "aws_route" "public" {
 }
 
 resource "aws_route_table_association" "public" {
-  count          = length(var.public_subnets)
+  count          = length(var.availability_zones)
   subnet_id      = element(aws_subnet.public.*.id, count.index)
   route_table_id = aws_route_table.public.id
 }
 
 resource "aws_security_group" "ecs_tasks" {
-  name   = "${var.name}-sg-task-${var.environment}"
+  name   = "${var.name}-${var.environment}-sg"
   vpc_id = aws_vpc.main.id
  
   ingress {
@@ -49,4 +53,6 @@ resource "aws_security_group" "ecs_tasks" {
 		cidr_blocks      = ["0.0.0.0/0"]
 		ipv6_cidr_blocks = ["::/0"]
   }
+
+  tags = var.common_tags
 }

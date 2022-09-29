@@ -1,5 +1,6 @@
 resource "aws_iam_role" "ecs_task_role" {
   name = "${var.name}-ecsTaskRole"
+  tags = var.common_tags
  
   assume_role_policy = <<EOF
 {
@@ -20,6 +21,7 @@ EOF
 
 resource "aws_iam_role" "ecs_task_execution_role" {
   name = "${var.name}-ecsTaskExecutionRole"
+  tags = var.common_tags
  
   assume_role_policy = <<EOF
 {

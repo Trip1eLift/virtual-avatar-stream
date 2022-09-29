@@ -1,6 +1,7 @@
 resource "aws_ecr_repository" "main" {
-	name                 = "${var.name}-${var.environment}"
+	name                 = "${var.name}-${var.environment}-ecr"
 	image_tag_mutability = "MUTABLE"
+	tags = var.common_tags
 }
 
 resource "aws_ecr_lifecycle_policy" "main" {
