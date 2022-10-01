@@ -28,11 +28,6 @@ variable "container_image" {
   description = "image name of the container"
 }
 
-variable "container_environment" {
-	type = string
-  description = "image environment of the container"
-}
-
 variable "container_port" {
 	type = number
   description = "exposing port number of the docker container"

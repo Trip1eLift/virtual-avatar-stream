@@ -34,3 +34,13 @@ curl -i -N http://127.0.0.1:5001/ ^
 -H "Sec-Websocket-Key: mock" ^
 -H "Health: healthcheck" || exit 1
 ```
+
+healthcheck bash
+```
+curl -i -N http://127.0.0.1:5001/ -H 'Connection: Upgrade' -H 'Upgrade: websocket' -H 'Sec-Websocket-Version: 13' -H 'Sec-Websocket-Key: mock' -H 'Health: healthcheck' || exit 1
+```
+
+healthcheck shallow bash
+```
+curl -i http://127.0.0.1:5001/health || exit 1
+```

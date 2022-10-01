@@ -73,7 +73,7 @@ func wsHealthCheck(conn *websocket.Conn, request *http.Request) bool {
 	if request.Header["Health"] == nil || request.Header["Health"][0] != "healthcheck" {
 		return false
 	}
-	log.Println("This is a health check connection. Instance is healthy. Terminating...")
+	log.Println("This is a health check connection. Instance is healthy. Disconnecting...")
 	// 8: CloseMessage, 1000: CloseNormalClosure
 	if err := conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "Instance is healthy!")); err != nil {
 		log.Println(err)

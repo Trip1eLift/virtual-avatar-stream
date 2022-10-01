@@ -15,24 +15,24 @@ resource "aws_ecs_task_definition" "main" {
 		name        = "${var.name}-${var.environment}-container"
 		image       = "${var.container_image}:latest"
 		essential   = true
-		environment = [{"name": "environment", "value": "${var.container_environment}"}]
+		environment = [{"name": "environment", "value": "${var.environment}"}]
 		portMappings = [{
 			protocol      = "tcp"
 			containerPort = var.container_port
 			hostPort      = var.container_port
 		}]
 		# TODO: Need to handle event for health check
-		# healthCheck = {
-    #   retries = 10
-    #   command = [ "CMD-SHELL", "curl -f http://localhost:8081/actuator/liveness || exit 1" ]
-    #   timeout: 5
-    #   interval: 10
-    #   startPeriod: var.health_start_period
-    # }
+		healthCheck = {
+      command     = [ "CMD-SHELL", "curl -i http://127.0.0.1:5001/health || exit 1" ]
+      retries     = 5
+			timeout     = 5
+      interval    = 10
+      startPeriod = 3
+    }
 		logConfiguration = {
       logDriver = "awslogs"
       options   = {
-        awslogs-group         = var.cloudwatch_group # TODO: need to create cloudwatch group somewhere and reference it here
+        awslogs-group         = aws_cloudwatch_log_group.main.name # TODO: need to create cloudwatch group somewhere and reference it here
         awslogs-region        = "us-east-1"
         awslogs-stream-prefix = "ecs"
       }
@@ -58,8 +58,8 @@ resource "aws_ecs_service" "main" {
 	}
 	
 	# load_balancer {
-	# 	target_group_arn = var.aws_alb_target_group_arn
-	# 	container_name   = "${var.name}-container-${var.environment}"
+	# 	target_group_arn = aws_alb_target_group.main.arn
+	# 	container_name   = "${var.name}-${var.environment}-container"
 	# 	container_port   = var.container_port
 	# }
 	
@@ -67,4 +67,10 @@ resource "aws_ecs_service" "main" {
 		ignore_changes = [task_definition, desired_count]
 	}
 	tags = var.common_tags
+}
+
+resource "aws_cloudwatch_log_group" "main" {
+  name = "${var.name}-log"
+
+  tags = var.common_tags
 }
