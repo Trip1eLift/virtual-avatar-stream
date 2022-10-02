@@ -1,7 +1,10 @@
-launch go from local
+## Local Development
 ```
 go mod download
 go run ./main.go
+
+npm i -g nodemon
+nodemon --watch '*.go' --signal SIGTERM --exec 'go' run main.go
 ```
 
 launch go from docker
@@ -9,6 +12,18 @@ launch go from docker
 docker build --tag virtual-avatar-stream .; docker run -it -p 5001:5001 virtual-avatar-stream
 ```
 
+## Push to AWS ECR
+```
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 201843717406.dkr.ecr.us-east-1.amazonaws.com
+
+docker build -t virtual-avatar-stream .
+
+docker tag virtual-avatar-stream:latest 201843717406.dkr.ecr.us-east-1.amazonaws.com/virtual-avatar-stream:latest
+
+docker push 201843717406.dkr.ecr.us-east-1.amazonaws.com/virtual-avatar-stream:latest
+```
+
+## Websocket Testing
 wscat
 ```
 npm install -g wscat

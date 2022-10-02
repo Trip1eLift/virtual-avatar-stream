@@ -87,8 +87,10 @@ func wsHealthCheck(conn *websocket.Conn, request *http.Request) bool {
 func main() {
 	http.HandleFunc("/", wsEndpoint)
 	http.HandleFunc("/health", func(write http.ResponseWriter, request *http.Request) {
+		log.Println("Host Address:", request.Host)
+		log.Println("Remote Address:", request.RemoteAddr)
 		log.Println("Healthy.")
-		fmt.Fprintf(write, "Healthy")
+		fmt.Fprintf(write, "Healthy.\n")
 	})
 	log.Println("Listening on localhost:" + port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
