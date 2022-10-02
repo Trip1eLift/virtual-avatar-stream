@@ -23,11 +23,6 @@ variable "availability_zones" {
   description = "list of availability zones for subnet (list length shoud be the same as subnet_cidrs)"
 }
 
-variable "container_image" {
-	type = string
-  description = "image name of the container"
-}
-
 variable "container_port" {
 	type = number
   description = "exposing port number of the docker container"

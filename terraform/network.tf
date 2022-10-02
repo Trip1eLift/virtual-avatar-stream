@@ -1,5 +1,4 @@
 resource "aws_vpc" "main" {
-  name       = "${var.name}-vpc"
   cidr_block = var.vpc_cidr
   tags       = var.common_tags
 }
@@ -48,6 +47,7 @@ resource "aws_security_group" "ecs_tasks" {
   }
 
   egress {
+    # egress all
 		protocol         = "-1"
 		from_port        = 0
 		to_port          = 0

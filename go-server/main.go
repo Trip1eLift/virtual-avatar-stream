@@ -87,6 +87,7 @@ func wsHealthCheck(conn *websocket.Conn, request *http.Request) bool {
 func main() {
 	http.HandleFunc("/", wsEndpoint)
 	http.HandleFunc("/health", func(write http.ResponseWriter, request *http.Request) {
+		log.Println("shallow health check.")
 		fmt.Fprintf(write, "Healthy")
 	})
 	log.Println("Listening on localhost:" + port)

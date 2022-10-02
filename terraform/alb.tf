@@ -1,4 +1,4 @@
-# ALB might be required to pass the provisioning state for ECS task?
+# ALB is not needed for the application setup
 # https://stackoverflow.com/questions/63123466/all-tasks-on-a-ecs-service-stuck-in-provisioning-state
 
 # resource "aws_lb" "main" {
