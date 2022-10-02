@@ -57,11 +57,11 @@ resource "aws_ecs_service" "main" {
 		assign_public_ip = true
 	}
 	
-	# load_balancer {
-	# 	target_group_arn = aws_alb_target_group.main.arn
-	# 	container_name   = "${var.name}-${var.environment}-container"
-	# 	container_port   = var.container_port
-	# }
+	load_balancer {
+		target_group_arn = aws_alb_target_group.main.arn
+		container_name   = "${var.name}-${var.environment}-container"
+		container_port   = var.container_port
+	}
 	
 	lifecycle {
 		ignore_changes = [task_definition, desired_count]
