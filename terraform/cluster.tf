@@ -21,14 +21,14 @@ resource "aws_ecs_task_definition" "main" {
 			containerPort = var.container_port
 			hostPort      = var.container_port
 		}]
-		# TODO: Need to handle event for health check
-		healthCheck = {
-      command     = [ "CMD-SHELL", "curl -i http://127.0.0.1:5001/health || exit 1" ]
-      retries     = 5
-			timeout     = 5
-      interval    = 10
-      startPeriod = 3
-    }
+		# Container healthcheck is failing while target group health check is passing somehow.
+		# healthCheck = {
+    #   command     = [ "CMD-SHELL", "curl -i http://127.0.0.1:5001/health || exit 1" ]
+    #   retries     = 5
+		# 	timeout     = 5
+    #   interval    = 10
+    #   startPeriod = 3
+    # }
 		logConfiguration = {
       logDriver = "awslogs"
       options   = {

@@ -73,7 +73,7 @@ func wsHealthCheck(conn *websocket.Conn, request *http.Request) bool {
 	if request.Header["Health"] == nil || request.Header["Health"][0] != "healthcheck" {
 		return false
 	}
-	log.Println("This is a health check connection. Instance is healthy. Disconnecting...")
+	log.Println("This is a websocket healthcheck connection. Instance is healthy. Disconnecting...")
 	// 8: CloseMessage, 1000: CloseNormalClosure
 	if err := conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "Instance is healthy!")); err != nil {
 		log.Println(err)
@@ -87,7 +87,7 @@ func wsHealthCheck(conn *websocket.Conn, request *http.Request) bool {
 func main() {
 	http.HandleFunc("/", wsEndpoint)
 	http.HandleFunc("/health", func(write http.ResponseWriter, request *http.Request) {
-		log.Println("shallow health check.")
+		log.Println("Healthy.")
 		fmt.Fprintf(write, "Healthy")
 	})
 	log.Println("Listening on localhost:" + port)
