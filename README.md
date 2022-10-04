@@ -1,4 +1,4 @@
-# Virtual-Avatar-Streaming-Backend
+# Virtual-Avatar-Stream
 This is a PoC project to test how to deploy a scalable end-to-end streaming distributive system to support video chat.
 
 ![Architecture Diagram](./Architecture-diagram.jpg)
