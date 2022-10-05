@@ -181,11 +181,37 @@ Response
 200 Success
 ```
 
-## Task IP updater (Scheduled Lambda)
+## Task IP refresher (Scheduled Lambda - Every hour)
 
 Note: The priority of this lambda is low.
 
 Poll instance IP once an hour using AWS API and update DB. Cleanup any [instance_ip, room_id] and [room_id, client_id] that are no longer valid.
+
+## Table expiration cleaner (Scheduled Lambda - Every 6am)
+
+Note: The priority of this lambda is low.
+
+Remove every rows that was written longer than 24 hrs ago. (not including the tasks table)
+
+## Tables
+
+1. tasks (healthy)
+
+| task_public_ip (primary key) |
+| ---------------------------- |
+| 34.201.215.175               |
+
+2. rooms
+
+| room_id (primary key) | task_public_ip | creation_time (ISO offset) |
+| --------------------- | -------------- | -------------------------- |
+| 00157                 | 34.201.215.175 | 2022-10-09 09-05:00        |
+
+3. users
+
+| user_id (primary key) | room_id | creation_time (ISO offset) |
+| --------------------- | ------- | -------------------------- |
+| uuidv4()              | 00157   | 2022-10-09 09-05:00        |
 
 ## Stream (Fargate backend)
 1. Health check
