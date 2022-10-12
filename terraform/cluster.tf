@@ -31,7 +31,7 @@ resource "aws_ecs_task_definition" "main" {
 		logConfiguration = {
       logDriver = "awslogs"
       options   = {
-        awslogs-group         = aws_cloudwatch_log_group.main.name # TODO: need to create cloudwatch group somewhere and reference it here
+        awslogs-group         = aws_cloudwatch_log_group.main.name
         awslogs-region        = "us-east-1"
         awslogs-stream-prefix = "ecs"
       }
@@ -58,7 +58,7 @@ resource "aws_ecs_service" "main" {
 		assign_public_ip = true
 	}
 	
-	# disable alb for now
+	# disable alb because it costs 30+ a month
 	# load_balancer {
 	# 	target_group_arn = aws_alb_target_group.main.arn
 	# 	container_name   = "${var.name}-${var.environment}-container"
