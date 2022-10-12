@@ -21,13 +21,14 @@ resource "aws_ecs_task_definition" "main" {
 			containerPort = var.container_port
 			hostPort      = var.container_port
 		}]
-		healthCheck = {
-			command     = [ "CMD-SHELL", "curl -sf http://localhost:5001/health || exit 1" ]
-			retries     = 3
-			timeout     = 3
-			interval    = 5
-			startPeriod = 5
-    	}
+		# Healthcheck is written in Dockerfile.
+		# healthCheck = {
+		# 	command     = [ "CMD-SHELL", "curl -sf http://localhost:5001/health || exit 1" ]
+		# 	retries     = 3
+		# 	timeout     = 3
+		# 	interval    = 5
+		# 	startPeriod = 5
+    	# }
 		logConfiguration = {
 			logDriver = "awslogs"
 			options   = {
@@ -54,19 +55,21 @@ resource "aws_ecs_service" "main" {
 
 	network_configuration {
 		security_groups  = [ aws_security_group.ecs_tasks.id ]
-  	subnets          = flatten(aws_subnet.public.*.id)
+  		subnets          = flatten(aws_subnet.public.*.id)
 		assign_public_ip = true
 	}
 	
-	# disable alb because it costs 30+ a month
+	# disable alb because it costs $30+ a month
 	# load_balancer {
 	# 	target_group_arn = aws_alb_target_group.main.arn
 	# 	container_name   = "${var.name}-${var.environment}-container"
 	# 	container_port   = var.container_port
 	# }
 	
+	# desired_count is dynamic based on the scaling policies
+	# force update desired_count to a higher number can achieve blue/green deployment
 	lifecycle {
-		ignore_changes = [task_definition, desired_count]
+		ignore_changes = [desired_count]
 	}
 	tags = var.common_tags
 }
