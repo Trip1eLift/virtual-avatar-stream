@@ -1,5 +1,7 @@
 FROM golang:1.19.1-alpine3.16
 
+RUN apk --no-cache add curl
+
 WORKDIR /app
 
 COPY go.mod ./
@@ -13,4 +15,6 @@ RUN go build -o /virtual-avatar-stream
 
 EXPOSE 5001
 
-CMD ["/virtual-avatar-stream"]
+HEALTHCHECK CMD curl -sf http://localhost:5001/health || exit 1 --health-retries=3 --health-timeout=3s --health-interval=5s --health-start-period=5s
+
+CMD [ "/virtual-avatar-stream" ]

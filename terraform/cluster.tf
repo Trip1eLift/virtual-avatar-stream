@@ -23,15 +23,11 @@ resource "aws_ecs_task_definition" "main" {
 		}]
 		# Container healthcheck is failing while target group health check is passing somehow.
 		healthCheck = {
-      # command     = [ "CMD-SHELL", "curl -f http://localhost:5001/health || exit 1" ]
-			# amazon linux 2 of fargate does not come with curl.
-			# assume if the machine stays healthy, it's containers are healthy.
-			# setup schedule lambda for health check and stop task if neccessary.
-			command     = [ "CMD-SHELL", "echo hello || exit 1" ]
+      command     = [ "CMD-SHELL", "curl -sf http://localhost:5001/health || exit 1" ]
       retries     = 3
-			timeout     = 5
-      interval    = 10
-      startPeriod = 60
+			timeout     = 3
+      interval    = 5
+      startPeriod = 5
     }
 		logConfiguration = {
       logDriver = "awslogs"

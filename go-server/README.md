@@ -12,6 +12,13 @@ launch go from docker
 docker build --tag virtual-avatar-stream .; docker run -it -p 5001:5001 virtual-avatar-stream
 ```
 
+launch with health check (healthcheck defined in Dockerfile)
+```
+docker build --tag virtual-avatar-stream .; docker run -d -p 5001:5001 virtual-avatar-stream
+
+docker inspect --format='{{json .State.Health}}' 221936098d1362afb92ee0c3397c4d2aa2f8cb9d59807c627a06b0f4b558d153
+```
+
 ## Push to AWS ECR
 ```
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 201843717406.dkr.ecr.us-east-1.amazonaws.com
