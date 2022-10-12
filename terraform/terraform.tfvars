@@ -12,3 +12,5 @@ common_tags = {
   Repository = "https://github.com/Trip1eLift/Virtual-Avatar-Streaming-Backend"
   Management = "Managed by Terraform" 
 }
+
+aws_account_id = "201843717406"

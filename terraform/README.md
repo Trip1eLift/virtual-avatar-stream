@@ -7,19 +7,7 @@ terraform apply
 terraform apply -destroy
 ```
 
-docker build, tag, and push
-
-```
-cd ../go-server
-
-aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 201843717406.dkr.ecr.us-east-1.amazonaws.com
-
-docker build -t virtual-avatar-stream .
-
-docker tag virtual-avatar-stream:latest 201843717406.dkr.ecr.us-east-1.amazonaws.com/virtual-avatar-stream:latest
-
-docker push 201843717406.dkr.ecr.us-east-1.amazonaws.com/virtual-avatar-stream:latest
-```
+docker build, tag, and push is now part of terraform.
 
 ## Trouble shooting
 

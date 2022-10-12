@@ -35,5 +35,10 @@ variable "cloudwatch_group" {
 
 variable "common_tags" {
 	type = map
-	description = "Common tags you want applied to all components."
+	description = "common tags you want applied to all components"
+}
+
+variable "aws_account_id" {
+  type = string
+  description = "aws account id for deployment"
 }

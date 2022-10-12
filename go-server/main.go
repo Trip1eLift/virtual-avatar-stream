@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+const ip = "0.0.0.0"
 const port = "5001"
 
 var upgrader = websocket.Upgrader{
@@ -92,6 +93,6 @@ func main() {
 		log.Println("Healthy.")
 		fmt.Fprintf(write, "Healthy.\n")
 	})
-	log.Println("Listening on localhost:" + port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	log.Println(fmt.Sprintf("Listening on %s:%s", ip, port))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%s", ip, port), nil))
 }

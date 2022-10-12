@@ -22,13 +22,17 @@ resource "aws_ecs_task_definition" "main" {
 			hostPort      = var.container_port
 		}]
 		# Container healthcheck is failing while target group health check is passing somehow.
-		# healthCheck = {
-    #   command     = [ "CMD-SHELL", "curl -i http://127.0.0.1:5001/health || exit 1" ]
-    #   retries     = 5
-		# 	timeout     = 5
-    #   interval    = 10
-    #   startPeriod = 3
-    # }
+		healthCheck = {
+      # command     = [ "CMD-SHELL", "curl -f http://localhost:5001/health || exit 1" ]
+			# amazon linux 2 of fargate does not come with curl.
+			# assume if the machine stays healthy, it's containers are healthy.
+			# setup schedule lambda for health check and stop task if neccessary.
+			command     = [ "CMD-SHELL", "echo hello || exit 1" ]
+      retries     = 3
+			timeout     = 5
+      interval    = 10
+      startPeriod = 60
+    }
 		logConfiguration = {
       logDriver = "awslogs"
       options   = {
@@ -50,6 +54,8 @@ resource "aws_ecs_service" "main" {
 	deployment_maximum_percent         = 200
 	launch_type                        = "FARGATE"
 	scheduling_strategy                = "REPLICA"
+	platform_version                   = "1.4.0"
+	force_new_deployment               = true
 
 	network_configuration {
 		security_groups  = [ aws_security_group.ecs_tasks.id ]
@@ -57,11 +63,12 @@ resource "aws_ecs_service" "main" {
 		assign_public_ip = true
 	}
 	
-	load_balancer {
-		target_group_arn = aws_alb_target_group.main.arn
-		container_name   = "${var.name}-${var.environment}-container"
-		container_port   = var.container_port
-	}
+	# disable alb for now
+	# load_balancer {
+	# 	target_group_arn = aws_alb_target_group.main.arn
+	# 	container_name   = "${var.name}-${var.environment}-container"
+	# 	container_port   = var.container_port
+	# }
 	
 	lifecycle {
 		ignore_changes = [task_definition, desired_count]

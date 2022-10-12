@@ -22,3 +22,23 @@ resource "aws_ecr_lifecycle_policy" "main" {
     }]
   })
 }
+
+resource "null_resource" "docker_build_push" {
+	depends_on = [
+    aws_ecr_repository.main
+  ]
+
+	triggers = {
+    always_run = "${timestamp()}"
+  }
+
+	# These scripts require aws cli and a running docker
+	provisioner "local-exec" {
+		command = <<-EOT
+      aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${var.aws_account_id}.dkr.ecr.us-east-1.amazonaws.com
+			docker build -t ${var.name} ../go-server
+			docker tag ${var.name}:latest ${var.aws_account_id}.dkr.ecr.us-east-1.amazonaws.com/${var.name}:latest
+			docker push ${var.aws_account_id}.dkr.ecr.us-east-1.amazonaws.com/${var.name}:latest
+    EOT
+	}	
+}
