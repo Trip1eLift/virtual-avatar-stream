@@ -1,17 +1,17 @@
 resource "aws_ecs_cluster" "main" {
-  name = "${var.name}-${var.environment}-cluster"
+	name = "${var.name}-${var.environment}-cluster"
 	tags = var.common_tags
 }
 
 resource "aws_ecs_task_definition" "main" {
 	family                   = "${var.name}-${var.environment}-family"
-  network_mode             = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
-  cpu                      = 256
-  memory                   = 512
-  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
-  task_role_arn            = aws_iam_role.ecs_task_role.arn
-  container_definitions = jsonencode([{
+	network_mode             = "awsvpc"
+	requires_compatibilities = ["FARGATE"]
+	cpu                      = 256
+	memory                   = 512
+	execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+	task_role_arn            = aws_iam_role.ecs_task_role.arn
+	container_definitions = jsonencode([{
 		name        = "${var.name}-${var.environment}-container"
 		image       = "${aws_ecr_repository.main.repository_url}:latest"
 		essential   = true
@@ -22,20 +22,20 @@ resource "aws_ecs_task_definition" "main" {
 			hostPort      = var.container_port
 		}]
 		healthCheck = {
-      command     = [ "CMD-SHELL", "curl -sf http://localhost:5001/health || exit 1" ]
-      retries     = 3
+			command     = [ "CMD-SHELL", "curl -sf http://localhost:5001/health || exit 1" ]
+			retries     = 3
 			timeout     = 3
-      interval    = 5
-      startPeriod = 5
-    }
+			interval    = 5
+			startPeriod = 5
+    	}
 		logConfiguration = {
-      logDriver = "awslogs"
-      options   = {
-        awslogs-group         = aws_cloudwatch_log_group.main.name
-        awslogs-region        = "us-east-1"
-        awslogs-stream-prefix = "ecs"
-      }
-    }
+			logDriver = "awslogs"
+			options   = {
+				awslogs-group         = aws_cloudwatch_log_group.main.name
+				awslogs-region        = "us-east-1"
+				awslogs-stream-prefix = "ecs"
+			}
+    	}
 	}])
 	tags = var.common_tags
 }
@@ -72,7 +72,6 @@ resource "aws_ecs_service" "main" {
 }
 
 resource "aws_cloudwatch_log_group" "main" {
-  name = "${var.name}-log"
-
-  tags = var.common_tags
+	name = "${var.name}-log"
+	tags = var.common_tags
 }
