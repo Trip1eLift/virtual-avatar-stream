@@ -21,7 +21,6 @@ resource "aws_ecs_task_definition" "main" {
 			containerPort = var.container_port
 			hostPort      = var.container_port
 		}]
-		# Container healthcheck is failing while target group health check is passing somehow.
 		healthCheck = {
       command     = [ "CMD-SHELL", "curl -sf http://localhost:5001/health || exit 1" ]
       retries     = 3
