@@ -7,10 +7,10 @@ container_port = 5001
 cloudwatch_group = "virtual-avatar-stream-log"
 
 common_tags = {
-  Project    = "virtualavatar"
-  Owner      = "Trip1eLift"
-  Repository = "https://github.com/Trip1eLift/Virtual-Avatar-Streaming-Backend"
-  Management = "Managed by Terraform" 
+	Project    = "virtualavatar"
+	Owner      = "Trip1eLift"
+	Repository = "https://github.com/Trip1eLift/Virtual-Avatar-Streaming-Backend"
+	Management = "Managed by Terraform" 
 }
 
 aws_account_id = "201843717406"
