@@ -6,8 +6,8 @@ RUN apk add sudo
 RUN apk add --update docker openrc
 RUN rc-update add docker boot
 
-RUN apk add --no-cache --virtual builddeps gcc musl-dev && \
-  pip --no-cache-dir install aws-sam-cli awscli && \
+RUN apk add --virtual builddeps gcc musl-dev && \
+  pip install aws-sam-cli awscli && \
   apk del builddeps
 
 RUN adduser -s /bin/bash samcli \

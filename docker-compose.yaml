@@ -1,15 +1,15 @@
 version: '3.8'
 services:
-  # stream:
-  #   container_name: stream
-  #   build: ./stream
-  #   ports:
-  #     - 5001:5001
-  #   working_dir: /app
-  #   volumes:
-  #     - ./stream:/app/
-  #   # override cmd
-  #   command: [ "nodemon", "--exec", "go", "run", "main.go", "--signal", "SIGTERM", "--legacy-watch", "--ext", ".go,.mod,.sum" ]
+  stream:
+    container_name: stream
+    build: ./stream
+    ports:
+      - 5001:5001
+    working_dir: /app
+    volumes:
+      - ./stream:/app/
+    # override cmd
+    command: [ "nodemon", "--exec", "go", "run", "main.go", "--signal", "SIGTERM", "--legacy-watch", "--ext", ".go,.mod,.sum" ]
   match:
     container_name: match
     build: ./match
