@@ -1,0 +1,29 @@
+version: '3.8'
+services:
+  # stream:
+  #   container_name: stream
+  #   build: ./stream
+  #   ports:
+  #     - 5001:5001
+  #   working_dir: /app
+  #   volumes:
+  #     - ./stream:/app/
+  #   # override cmd
+  #   command: [ "nodemon", "--exec", "go", "run", "main.go", "--signal", "SIGTERM", "--legacy-watch", "--ext", ".go,.mod,.sum" ]
+  match:
+    container_name: match
+    build: ./match
+    ports:
+      - 8080:8080
+    working_dir: /app
+    volumes:
+      - ./match:/app/
+      - /var/run/docker.sock:/var/run/docker.sock
+    tty: true
+    command: sh -c "sudo sam build && sudo sam local start-api --port 8080 --host 0.0.0.0 --container-host-interface 0.0.0.0"
+    # privileged: true
+    #   - /usr/bin/docker:/usr/bin/docker
+    # environment:
+    #   - TZ=Etc/GMT
+    #   - SAM_CLI_TELEMETRY=false
+    #   - DOCKER_HOST=unix:///var/run/docker.sock

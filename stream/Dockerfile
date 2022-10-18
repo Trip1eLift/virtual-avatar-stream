@@ -1,5 +1,9 @@
 FROM golang:1.19.1-alpine3.16
 
+RUN apk add --update nodejs npm
+
+RUN npm install -g nodemon
+
 WORKDIR /app
 
 COPY go.mod ./
