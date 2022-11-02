@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS rooms(room_id VARCHAR(64) PRIMARY KEY, task_private_ip VARCHAR(20));

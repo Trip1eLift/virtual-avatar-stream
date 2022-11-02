@@ -1,23 +1,43 @@
 version: '3.8'
 services:
-  stream:
-    container_name: stream
-    build: ./stream
+  client:
+    container_name: client
+    build: ./frontend
     ports:
-      - 5001:5001
+      - 3000:3000
     working_dir: /app
     volumes:
-      - ./stream:/app/
-    # override cmd
-    command: [ "nodemon", "--exec", "go", "run", "main.go", "--signal", "SIGTERM", "--legacy-watch", "--ext", ".go,.mod,.sum" ]
+      - ./frontend:/app/
+      - /app/node_modules
+    command: npm run dev
   match:
     container_name: match
     build: ./match
     ports:
-      - 8080:8080
+      - 5000:5000
     working_dir: /app
     volumes:
       - ./match:/app/
-      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DB_USER=postgres_user
+      - DB_HOST=postgres_container
+      - DB_PASS=postgres_password
+      - DB_PORT=5432
+      - ORIGIN=http://localhost:3000
     tty: true
-    command: sh -c "sudo sam build && sudo sam local start-api --port 8080 --host 0.0.0.0 --container-host host.docker.internal"
+    command: nodemon --exec go run main.go || echo crashed --signal SIGTERM --legacy-watch --ext .go,.mod,.sum
+  postgres:
+    container_name: postgres_container
+    image: postgres:14.1-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres_user
+      - POSTGRES_PASSWORD=postgres_password
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres:/var/lib/postgresql/data
+      - ./postgres/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
+volumes:
+  postgres:
+    driver: local

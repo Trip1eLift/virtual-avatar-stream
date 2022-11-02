@@ -1,5 +1,0 @@
-.dockerignore
-Dockerfile
-*.rest
-eni-ip
-terraform

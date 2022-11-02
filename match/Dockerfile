@@ -1,21 +1,22 @@
-FROM python:alpine3.16
+FROM golang:1.19.1-alpine3.16
 
-RUN apk add curl
-RUN apk add sudo
-
-RUN apk add --update docker openrc
-RUN rc-update add docker boot
-
-RUN apk add --virtual builddeps gcc musl-dev && \
-  pip install aws-sam-cli awscli && \
-  apk del builddeps
-
-RUN adduser -s /bin/bash samcli \
-  --disabled-password \
-  && echo 'samcli ALL=(ALL) NOPASSWD:ALL' >>/etc/sudoers
-
-USER samcli
+RUN apk --no-cache add curl
+RUN apk add --update nodejs npm
+RUN npm install -g nodemon
 
 WORKDIR /app
 
-COPY . ./
+COPY go.mod ./
+COPY go.sum ./
+
+RUN go mod download
+
+COPY *.go ./
+
+RUN go build -o /virtual-avatar-stream
+
+EXPOSE 5001
+
+HEALTHCHECK CMD curl -sf http://localhost:5001/health || exit 1 --health-retries=3 --health-timeout=3s --health-interval=5s --health-start-period=5s
+
+CMD [ "/virtual-avatar-stream" ]

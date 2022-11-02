@@ -1,2 +1,5 @@
-.aws-sam
+.dockerignore
+Dockerfile
 *.rest
+eni-ip
+terraform
