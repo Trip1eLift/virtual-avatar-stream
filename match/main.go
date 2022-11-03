@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -21,6 +22,7 @@ var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 	CheckOrigin:     wsHeaderCheck,
+	Subprotocols:    []string{"owner", "guest"},
 }
 
 func reader(conn *websocket.Conn) {
@@ -42,12 +44,25 @@ func reader(conn *websocket.Conn) {
 	}
 }
 
-func wsEndpoint(write http.ResponseWriter, request *http.Request) {
-	response_header := http.Header{
-		"Status": {"Connection-Established"},
-		//"Room":   {"00001"},
+func setOwnerRoomId(conn *websocket.Conn, request *http.Request) error {
+	log.Println("HERE", request.Header["Sec-Websocket-Protocol"])
+	if request.Header["Sec-Websocket-Protocol"][0] == "owner" {
+		// TODO: check database to find unique room_id
+		message := map[string]interface{}{
+			"key":   "room_id",
+			"value": 1,
+		}
+		if payload, err := json.Marshal(message); err != nil {
+			return err
+		} else {
+			conn.WriteMessage(websocket.TextMessage, payload)
+		}
 	}
-	ws, err := upgrader.Upgrade(write, request, response_header)
+	return nil
+}
+
+func wsEndpoint(write http.ResponseWriter, request *http.Request) {
+	ws, err := upgrader.Upgrade(write, request, nil)
 	if err != nil {
 		log.Println(err)
 		return
@@ -58,6 +73,7 @@ func wsEndpoint(write http.ResponseWriter, request *http.Request) {
 	if close := wsHealthCheck(ws, request); close == true {
 		return
 	}
+	setOwnerRoomId(ws, request)
 	reader(ws)
 }
 
