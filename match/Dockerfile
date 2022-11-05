@@ -11,9 +11,9 @@ COPY go.sum ./
 
 RUN go mod download
 
-COPY src ./src
+COPY . ./
 
-RUN go build -o /virtual-avatar-stream ./src
+RUN go build -o /virtual-avatar-stream
 
 EXPOSE 5000
 

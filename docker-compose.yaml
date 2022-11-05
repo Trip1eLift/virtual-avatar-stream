@@ -35,7 +35,7 @@ services:
     depends_on:
       - postgres
     tty: true
-    command: nodemon --exec go run src/main.go || echo crashed --signal SIGTERM --legacy-watch --ext .go,.mod,.sum
+    command: nodemon --exec go run main.go --signal SIGTERM --legacy-watch --ext .go,.mod,.sum
   match2:
     container_name: match2
     build: ./match
@@ -58,7 +58,7 @@ services:
     depends_on:
       - postgres
     tty: true
-    command: nodemon --exec go run src/main.go || echo crashed --signal SIGTERM --legacy-watch --ext .go,.mod,.sum
+    command: nodemon --exec go run main.go --signal SIGTERM --legacy-watch --ext .go,.mod,.sum
   postgres:
     container_name: postgres_container
     image: postgres:14.1-alpine

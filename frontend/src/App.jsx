@@ -35,14 +35,15 @@ function hostRoom() {
 }
 
 function joinRoom(room_id) {
-  socket = new WebSocket(url, ["guest"]);
+  socket = new WebSocket(url, ["guest", "1"]);
 }
 
 function App() {
 
   return (
     <div className="App">
-      <button onClick={hostRoom} >Host</button>
+      <button onClick={hostRoom} >Owner</button>
+      <button onClick={joinRoom} >Guest</button>
     </div>
   );
 }
