@@ -9,6 +9,9 @@ services:
     volumes:
       - ./frontend:/app/
       - /app/node_modules
+    hostname: client
+    depends_on:
+      - match
     command: npm run dev
   match:
     container_name: match
@@ -24,6 +27,36 @@ services:
       - DB_PASS=postgres_password
       - DB_PORT=5432
       - ORIGIN=http://localhost:3000
+      - AISLE_KEY=passcode
+      - SIBILING_IP=172.16.238.12
+    networks:
+      app_net:
+        ipv4_address: 172.16.238.11
+    depends_on:
+      - postgres
+    tty: true
+    command: nodemon --exec go run main.go || echo crashed --signal SIGTERM --legacy-watch --ext .go,.mod,.sum
+  match2:
+    container_name: match2
+    build: ./match
+    ports:
+      - 5001:5000
+    working_dir: /app
+    volumes:
+      - ./match:/app/
+    environment:
+      - DB_USER=postgres_user
+      - DB_HOST=postgres_container
+      - DB_PASS=postgres_password
+      - DB_PORT=5432
+      - ORIGIN=http://localhost:3000
+      - AISLE_KEY=passcode
+      - SIBILING_IP=172.16.238.11
+    networks:
+      app_net:
+        ipv4_address: 172.16.238.12
+    depends_on:
+      - postgres
     tty: true
     command: nodemon --exec go run main.go || echo crashed --signal SIGTERM --legacy-watch --ext .go,.mod,.sum
   postgres:
@@ -41,3 +74,10 @@ services:
 volumes:
   postgres:
     driver: local
+networks:
+  app_net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.16.238.0/24"

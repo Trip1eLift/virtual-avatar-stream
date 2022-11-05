@@ -22,7 +22,7 @@ var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 	CheckOrigin:     wsHeaderCheck,
-	Subprotocols:    []string{"owner", "guest"},
+	Subprotocols:    []string{"owner", "guest", "aisle"},
 }
 
 func reader(conn *websocket.Conn) {
@@ -70,9 +70,6 @@ func wsEndpoint(write http.ResponseWriter, request *http.Request) {
 
 	log.Println("Client Successfully Connected...")
 
-	if close := wsHealthCheck(ws, request); close == true {
-		return
-	}
 	setOwnerRoomId(ws, request)
 	reader(ws)
 }
@@ -90,28 +87,20 @@ func wsHeaderCheck(request *http.Request) bool {
 		log.Println("Sec-Websocket-Key is missing.")
 		return false
 	}
-	if request.Header["Origin"] == nil || request.Header["Origin"][0] != os.Getenv("ORIGIN") {
-		log.Println(fmt.Sprintf("Origin is not [%s] but %s.", os.Getenv("ORIGIN"), request.Header["Origin"]))
-		return false
-	}
 	if request.Header["Sec-Websocket-Protocol"] == nil || len(request.Header["Sec-Websocket-Protocol"]) <= 0 {
 		log.Println("Sec-Websocket-Protocol is missing.")
 		return false
-	}
-	return true
-}
-
-func wsHealthCheck(conn *websocket.Conn, request *http.Request) bool {
-	if request.Header["Health"] == nil || request.Header["Health"][0] != "healthcheck" {
+	} else if (request.Header["Sec-Websocket-Protocol"][0] == "owner" ||
+		request.Header["Sec-Websocket-Protocol"][0] == "guest") &&
+		(request.Header["Origin"] == nil ||
+			request.Header["Origin"][0] != os.Getenv("ORIGIN")) {
+		log.Println(fmt.Sprintf("Origin is not [%s] but %s.", os.Getenv("ORIGIN"), request.Header["Origin"]))
 		return false
-	}
-	log.Println("This is a websocket healthcheck connection. Instance is healthy. Disconnecting...")
-	// 8: CloseMessage, 1000: CloseNormalClosure
-	if err := conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "Instance is healthy!")); err != nil {
-		log.Println(err)
-	}
-	if err := conn.Close(); err != nil {
-		log.Println(err)
+	} else if request.Header["Sec-Websocket-Protocol"][0] == "aisle" &&
+		(len(request.Header["Sec-Websocket-Protocol"]) != 2 ||
+			request.Header["Sec-Websocket-Protocol"][1] != os.Getenv("AISLE_KEY")) {
+		log.Println(fmt.Sprintf("AISLE protocol failure."))
+		return false
 	}
 	return true
 }
