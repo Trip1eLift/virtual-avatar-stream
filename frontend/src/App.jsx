@@ -35,7 +35,21 @@ function hostRoom() {
 }
 
 function joinRoom(room_id) {
-  socket = new WebSocket(url, ["guest", "1"]);
+  socket = new WebSocket(url, ["guest"]);
+
+  Supply(socket, "Room-Id", room_id);
+}
+
+function Supply(conn, ask, ans) {
+  conn.onmessage = (event) => {
+    let pack = JSON.parse(event.data);
+    if (pack.Bus != ask)
+      return;
+    pack = {
+      "Bus": ans
+    }
+    conn.send(JSON.stringify(pack));
+  }
 }
 
 function App() {
@@ -43,7 +57,7 @@ function App() {
   return (
     <div className="App">
       <button onClick={hostRoom} >Owner</button>
-      <button onClick={joinRoom} >Guest</button>
+      <button onClick={(e)=>joinRoom("1")} >Guest</button>
     </div>
   );
 }

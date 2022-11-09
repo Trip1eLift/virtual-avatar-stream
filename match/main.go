@@ -35,13 +35,13 @@ func wsEndpoint(write http.ResponseWriter, request *http.Request) {
 	log.Println("Client Successfully Connected...")
 
 	if err := stream.HandleOwner(ws, request); err != nil {
-		log.Printf("Owner error: %s\n", err.Error())
+		log.Printf("Owner error")
 	}
-	if err := stream.HandleGuest(ws, request); err != nil {
-		log.Printf("Guest error: %s\n", err.Error())
+	if err := stream.HandleGuest(ws, request, port); err != nil {
+		log.Printf("Guest error")
 	}
 	if err := stream.HandleAisle(ws, request); err != nil {
-		log.Printf("Aisle error: %s\n", err.Error())
+		log.Printf("Aisle error")
 	}
 
 	if err := ws.Close(); err != nil {

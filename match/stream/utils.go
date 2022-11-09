@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 )
 
 func HeaderVerify(request *http.Request) bool {
@@ -21,57 +20,20 @@ func HeaderVerify(request *http.Request) bool {
 		return false
 	}
 
-	// Expect protocol
-	// Owner len: 1 -> {"owner",}
-	// Guest len: 2 -> {"guest", "<room_id>",}
-	// Aisle len: 3 -> {"guest", "<room_id>", "<aisle_key>",}
-	protocol := request.Header["Sec-Websocket-Protocol"]
-	log.Println("HERE", protocol)
-	log.Println(protocol[0][0])
-	log.Println(protocol[0] == "owner")
-	log.Println(protocol[0] == "guest")
-	log.Println(protocol[0] == "aisle")
-	if protocol == nil || len(protocol) < 1 {
+	if request.Header["Sec-Websocket-Protocol"] == nil || len(request.Header["Sec-Websocket-Protocol"]) != 1 {
 		log.Println("Sec-Websocket-Protocol is missing.")
 		return false
-	} else if protocol[0] != "owner" && protocol[0] != "guest" && protocol[0] != "aisle" {
+	}
+	protocol := request.Header["Sec-Websocket-Protocol"][0]
+	if protocol != "owner" && protocol != "guest" && protocol != "aisle" {
 		log.Println("Unrecognized protocol.")
 		return false
-	} else if protocol[0] == "owner" {
-		if len(protocol) != 1 {
-			log.Println("Owner protocol length error.")
-			return false
-		}
-		if request.Header["Origin"] == nil || request.Header["Origin"][0] != os.Getenv("ORIGIN") {
-			log.Printf("Owner origin is not [%s] but %s.\n", os.Getenv("ORIGIN"), request.Header["Origin"])
-			return false
-		}
-	} else if protocol[0] == "guest" {
-		if len(protocol) != 2 {
-			log.Println("Guest protocol length error.")
-			return false
-		}
-		if request.Header["Origin"] == nil || request.Header["Origin"][0] != os.Getenv("ORIGIN") {
-			log.Printf("Guest origin is not [%s] but %s.\n", os.Getenv("ORIGIN"), request.Header["Origin"])
-			return false
-		}
-		if _, err := strconv.Atoi(protocol[1]); err != nil {
-			log.Printf("Guest room_id error: %s\n", err.Error())
-			return false
-		}
-	} else if protocol[0] == "asile" {
-		if len(protocol) != 3 {
-			log.Println("Aisle protocol length error.")
-			return false
-		}
-		if _, err := strconv.Atoi(protocol[1]); err != nil {
-			log.Printf("Aisle room_id error: %s\n", err.Error())
-			return false
-		}
-		if protocol[2] != os.Getenv("AISLE_KEY") {
-			log.Println("Aisle key error.")
-			return false
-		}
 	}
+	if (protocol == "owner" || protocol == "guest") &&
+		(request.Header["Origin"] == nil || request.Header["Origin"][0] != os.Getenv("ORIGIN")) {
+		log.Printf("Guest/Owner origin is not [%s] but %s.\n", os.Getenv("ORIGIN"), request.Header["Origin"])
+		return false
+	}
+
 	return true
 }

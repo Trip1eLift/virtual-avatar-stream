@@ -1,10 +1,14 @@
+## Style
+1. Print the error the moment it occurs, so the parent level only error out. The parent level does not print the error.
+2. Demand and Supply's key looks like header: Room-Id, Authorization...
+
 ## Local Development
 ```
 go mod download
 go run ./main.go
 
 npm i -g nodemon
-nodemon --watch '*.go' --signal SIGTERM --exec 'go' run main.go
+nodemon --exec 'go run main.go | echo "crashed"' --signal SIGTERM --legacy-watch --ext .go,.mod,.sum
 ```
 
 ## Websocket Testing
