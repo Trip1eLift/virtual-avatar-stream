@@ -41,14 +41,16 @@ function joinRoom(room_id) {
 }
 
 function Supply(conn, ask, ans) {
+  const handlerCache = conn.onmessage;
   conn.onmessage = (event) => {
     let pack = JSON.parse(event.data);
-    if (pack.Bus != ask)
-      return;
-    pack = {
-      "Bus": ans
+    if (pack.Bus == ask) {
+      pack = {
+        "Bus": ans
+      }
+      conn.send(JSON.stringify(pack));
     }
-    conn.send(JSON.stringify(pack));
+    conn.onmessage = handlerCache;
   }
 }
 
