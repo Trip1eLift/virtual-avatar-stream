@@ -1,8 +1,6 @@
 package stream
 
 import (
-	"errors"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -35,37 +33,40 @@ func HandleOwner(conn *websocket.Conn, request *http.Request) error {
 	// Dynamically find (aisle/guest) conn
 	// - Read from owner and write to (aisle/guest)
 	// - Write to owner will be triggered by (aisle/guest)
-	err = reader(room_id)
-	if err != nil {
-		return err
-	}
-
 	// 5. Remove room_id from cache when connection closes
-	// TODO: how do detect connection closure
+	go proxy_owner_target(room_id)
 
 	return nil
 }
 
-func reader(room_id string) error {
-	if _, found := ConnectionCache.index[room_id]; found == false {
-		err := errors.New(fmt.Sprintf("Owner reader failure. Room_id: %s does not exist.", room_id))
-		log.Println(err.Error())
-		return err
-	}
-
+func proxy_owner_target(room_id string) error {
 	for {
-		// TODO: handle client close here?
-		messageType, body, err := ConnectionCache.index[room_id].owner.ReadMessage()
+		// wait when there's no target
+		err := ConnectionCache.waitRoom(room_id)
 		if err != nil {
-			log.Println(err)
+			ConnectionCache.removeRoom(room_id)
+			return err
+		}
+		ownerConn, targetConn, err := ConnectionCache.getRoom(room_id)
+		if err != nil {
+			ConnectionCache.removeRoom(room_id)
 			return err
 		}
 
-		if ConnectionCache.index[room_id].target != nil {
-			err = ConnectionCache.index[room_id].target.WriteMessage(messageType, body)
+		for {
+
+			messageType, body, err := ownerConn.ReadMessage()
 			if err != nil {
-				log.Println(err)
+				log.Println(err.Error())
+				ConnectionCache.removeRoom(room_id)
 				return err
+			}
+
+			// break if target close
+			err = targetConn.WriteMessage(messageType, body)
+			if err != nil {
+				log.Println(err.Error())
+				break
 			}
 		}
 	}

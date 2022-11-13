@@ -33,6 +33,36 @@ func HandleAisle(conn *websocket.Conn, request *http.Request) error {
 	// Enter aisle-owner reader
 	// - Read from aisle and write to owner
 	// - Write to aisle will be triggered by owner
+	err = ConnectionCache.addTarget(room_id_str, conn)
+	if err != nil {
+		return err
+	}
+	go Proxy_target_owner(room_id_str)
 
 	return nil
+}
+
+func Proxy_target_owner(room_id string) error {
+	ownerConn, targetConn, err := ConnectionCache.getRoom(room_id)
+	if err != nil {
+		ConnectionCache.removeTarget(room_id)
+		return err
+	}
+
+	for {
+		// TODO: return nil if target close gracefully
+		messageType, body, err := targetConn.ReadMessage()
+		if err != nil {
+			log.Println(err.Error())
+			ConnectionCache.removeTarget(room_id)
+			return err
+		}
+
+		err = ownerConn.WriteMessage(messageType, body)
+		if err != nil {
+			log.Println(err.Error())
+			ConnectionCache.removeTarget(room_id)
+			return err
+		}
+	}
 }
