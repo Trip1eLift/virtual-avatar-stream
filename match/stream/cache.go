@@ -120,4 +120,4 @@ func (c *Connections) removeTarget(room_id string) error {
 }
 
 // Declare Global variable
-var ConnectionCache Connections
+var ConnectionCache = Connections{index: make(map[string]*ConnectionRoom)}

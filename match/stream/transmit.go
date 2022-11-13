@@ -71,7 +71,7 @@ func Supply(conn *websocket.Conn, ask string, ans string) error {
 		return err
 	}
 
-	pack = Payload{Bus: ask}
+	pack = Payload{Bus: ans}
 	body, err = json.Marshal(pack)
 	if err != nil {
 		err = errors.New("Supply marshal error: " + err.Error())

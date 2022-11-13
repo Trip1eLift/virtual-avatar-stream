@@ -42,7 +42,9 @@ func HandleOwner(conn *websocket.Conn, request *http.Request) error {
 func proxy_owner_target(room_id string) error {
 	for {
 		// wait when there's no target
+		log.Println("HERE wait")
 		err := ConnectionCache.waitRoom(room_id)
+		log.Println("HERE after wait")
 		if err != nil {
 			ConnectionCache.removeRoom(room_id)
 			return err
