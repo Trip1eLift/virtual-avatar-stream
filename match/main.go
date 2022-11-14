@@ -32,7 +32,7 @@ func wsEndpoint(write http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	log.Println("Client Successfully Connected...")
+	//log.Println("Client Successfully Connected...")
 
 	if err := stream.HandleOwner(ws, request); err != nil {
 		log.Printf("Owner error")

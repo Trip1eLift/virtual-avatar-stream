@@ -64,10 +64,10 @@ func HandleGuest(conn *websocket.Conn, request *http.Request, port string) error
 		log.Println(err.Error())
 		return err
 	}
-	if err = Supply(conn, "Authorization", os.Getenv("AISLE_KEY")); err != nil {
+	if err = Supply(aisle_conn, "Authorization", os.Getenv("AISLE_KEY")); err != nil {
 		return err
 	}
-	if err = Supply(conn, "room_id", room_id_str); err != nil {
+	if err = Supply(aisle_conn, "Room-Id", room_id_str); err != nil {
 		return err
 	}
 

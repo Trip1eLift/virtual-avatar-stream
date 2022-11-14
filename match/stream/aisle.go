@@ -9,6 +9,8 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// TODO: Fix guest->aisle->owner guest join leave join
+
 func HandleAisle(conn *websocket.Conn, request *http.Request) error {
 	if request.Header["Sec-Websocket-Protocol"][0] != "aisle" {
 		return nil
@@ -27,7 +29,7 @@ func HandleAisle(conn *websocket.Conn, request *http.Request) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Aisle target room_id: %s\n", room_id_str)
+	log.Printf("Aisle join room_id: %s\n", room_id_str)
 
 	// Find owner conn
 	// Enter aisle-owner reader

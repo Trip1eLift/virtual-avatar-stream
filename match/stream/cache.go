@@ -66,6 +66,7 @@ func (c *Connections) waitRoom(room_id string) (bool, error) {
 
 	// Catch if owner close connection before any target appears
 	quit := make(chan bool)
+	connected := false
 	go func() {
 		for {
 			select {
@@ -75,19 +76,43 @@ func (c *Connections) waitRoom(room_id string) (bool, error) {
 				if terminate {
 					break // force loop to be alive after terminate and before quit
 				}
-				// TODO: This will eat away one read from owner after owner-target (guest/aisle) is established
-				//       Is it possible to fix it?
-				if _, _, err := owner.NextReader(); err != nil {
+				messageType, body, err := owner.ReadMessage()
+				if err != nil {
 					wait.Done()
 					terminate = true
+				}
+
+				// Catch the first read after owner-target connection is established
+				if connected {
+					target, err := c.getTarget(room_id)
+					if err == nil {
+						err = target.WriteMessage(messageType, body)
+						if err != nil {
+							log.Printf("Catch first read error: %s\n", err.Error())
+						}
+					}
 				}
 			}
 		}
 	}()
 
 	wait.Wait() // wait for room_id be signal to start
+	connected = true
 	quit <- true
 	return terminate, nil
+}
+
+func (c *Connections) getTarget(room_id string) (*websocket.Conn, error) {
+	c.mutex.Lock()
+	room := c.index[room_id]
+	if room == nil || room.target == nil {
+		c.mutex.Unlock()
+		err := errors.New(fmt.Sprintf("Cannot get target from room_id: %s", room_id))
+		log.Println(err.Error())
+		return nil, err
+	}
+	c.mutex.Unlock()
+	return room.target, nil
 }
 
 // The return bool indicates if the error is fatal to owner

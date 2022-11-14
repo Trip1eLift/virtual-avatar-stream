@@ -60,13 +60,15 @@ func Supply(conn *websocket.Conn, ask string, ans string) error {
 	var pack Payload
 	err = json.Unmarshal(body, &pack)
 	if err != nil {
+		log.Println("DEBUG", ask, ans, string(body))
 		err = errors.New("Supply unmarshal error: " + err.Error())
 		log.Println(err.Error())
 		return err
 	}
 
 	if pack.Bus != ask {
-		err = errors.New("Supply verifying error: expected " + ask + " but recieved" + pack.Bus)
+		log.Println("DEBUG", ask, ans, pack)
+		err = errors.New("Supply verifying error: expected " + ask + " but recieved " + pack.Bus)
 		log.Println(err.Error())
 		return err
 	}

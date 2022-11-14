@@ -43,6 +43,7 @@ func HandleOwner(conn *websocket.Conn, request *http.Request) error {
 func proxy_owner_target(room_id string) error {
 	for {
 		// wait when there's no target
+		log.Println("DEBUG waiting...")
 		term, err := ConnectionCache.waitRoom(room_id)
 		if err != nil {
 			ConnectionCache.removeRoom(room_id)
@@ -74,8 +75,16 @@ func proxy_owner_target(room_id string) error {
 			// break if target close
 			err = targetConn.WriteMessage(messageType, body)
 			if err != nil {
-				log.Println(err.Error())
-				break
+				// Handle if target join leave join
+				tgRetry, tgErr := ConnectionCache.getTarget(room_id)
+				if tgErr == nil && tgRetry.WriteMessage(messageType, body) == nil {
+					targetConn = tgRetry
+					continue
+				} else {
+					// Emit first occur error
+					log.Println(err.Error())
+					break
+				}
 			}
 		}
 	}
