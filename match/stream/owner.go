@@ -34,6 +34,7 @@ func HandleOwner(conn *websocket.Conn, request *http.Request) error {
 	handleClose := conn.CloseHandler()
 	conn.SetCloseHandler(func(code int, text string) error {
 		ConnectionCache.removeRoom(room_id)
+		// TODO: Remove room_id from database
 		return handleClose(code, text)
 	})
 
