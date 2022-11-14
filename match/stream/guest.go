@@ -27,7 +27,7 @@ func HandleGuest(conn *websocket.Conn, request *http.Request, port string) error
 		log.Println(err.Error())
 		return err
 	}
-	log.Printf("Guest target room_id: %d\n", room_id)
+	log.Printf("Guest join room_id: %d\n", room_id)
 
 	// 2. Handle if room_id is at this instance
 	// Find owner conn
@@ -40,7 +40,7 @@ func HandleGuest(conn *websocket.Conn, request *http.Request, port string) error
 		if err != nil {
 			return err
 		}
-		go Proxy_target_owner(room_id_str)
+		Proxy_target_owner(room_id_str)
 
 		return nil
 	}
@@ -75,8 +75,9 @@ func HandleGuest(conn *websocket.Conn, request *http.Request, port string) error
 	// Go routine
 	// - Read from guest and write to aisle
 	// - Read from aisle and write to guest
+	// TODO: study if there's a better way
 	go proxy_guest_aisle(conn, aisle_conn)
-	go proxy_aisle_guest(aisle_conn, conn)
+	proxy_aisle_guest(aisle_conn, conn)
 
 	return nil
 }

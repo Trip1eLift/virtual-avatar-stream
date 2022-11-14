@@ -37,13 +37,13 @@ func HandleAisle(conn *websocket.Conn, request *http.Request) error {
 	if err != nil {
 		return err
 	}
-	go Proxy_target_owner(room_id_str)
+	Proxy_target_owner(room_id_str)
 
 	return nil
 }
 
 func Proxy_target_owner(room_id string) error {
-	ownerConn, targetConn, err := ConnectionCache.getRoom(room_id)
+	ownerConn, targetConn, _, err := ConnectionCache.getRoom(room_id)
 	if err != nil {
 		ConnectionCache.removeTarget(room_id)
 		return err

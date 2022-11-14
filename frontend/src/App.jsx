@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import './App.css';
 
 const url1 = "ws://localhost:5000";
@@ -13,6 +14,7 @@ function ownerConn(url) {
     
     const room_id = await Demand(socket, "Room-Id");
     console.log(`Room-Id: ${room_id}`);
+    //socket.send(JSON.stringify({"Bus": "Room-Id"}));
   };
   
   socket.onmessage = function(event) {
@@ -33,7 +35,7 @@ function ownerConn(url) {
   };
 }
 
-async function guestConn(url, room_id) {
+function guestConn(url, room_id) {
   socket = new WebSocket(url, ["guest"]);
 
   socket.onopen = async function(e) {
@@ -58,6 +60,12 @@ async function guestConn(url, room_id) {
     console.error(error);
     console.error(`[error]`);
   };
+}
+
+function sendUuid() {
+  if (socket !== undefined) {
+    socket.send(`Push ${uuidv4()}`);
+  }
 }
 
 function Demand(conn, ask) {
@@ -98,6 +106,9 @@ function App() {
       <button onClick={(e)=>ownerConn(url2)} >Owner Sever 2</button>
       <button onClick={(e)=>guestConn(url1, "1")} >Guest Server 1</button>
       <button onClick={(e)=>guestConn(url2, "1")} >Guest Server 2</button>
+      <br/>
+      <br/>
+      <button onClick={(e)=>sendUuid()}>Send ID</button>
     </div>
   );
 }

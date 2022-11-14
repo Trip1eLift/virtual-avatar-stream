@@ -51,27 +51,53 @@ func (c *Connections) removeRoom(room_id string) error {
 	return nil
 }
 
-func (c *Connections) waitRoom(room_id string) error {
+func (c *Connections) waitRoom(room_id string) (bool, error) {
+	terminate := false
 	c.mutex.Lock()
 	if _, found := c.index[room_id]; found == false {
 		c.mutex.Unlock()
 		err := errors.New(fmt.Sprintf("Cannot wait on room_id: %s because it does not exist in index.", room_id))
 		log.Println(err.Error())
-		return err
+		return terminate, err
 	}
+	owner := c.index[room_id].owner
 	wait := c.index[room_id].wait
 	c.mutex.Unlock()
+
+	// Catch if owner close connection before any target appears
+	quit := make(chan bool)
+	go func() {
+		for {
+			select {
+			case <-quit:
+				return
+			default:
+				if terminate {
+					break // force loop to be alive after terminate and before quit
+				}
+				// TODO: This will eat away one read from owner after owner-target (guest/aisle) is established
+				//       Is it possible to fix it?
+				if _, _, err := owner.NextReader(); err != nil {
+					wait.Done()
+					terminate = true
+				}
+			}
+		}
+	}()
+
 	wait.Wait() // wait for room_id be signal to start
-	return nil
+	quit <- true
+	return terminate, nil
 }
 
-func (c *Connections) getRoom(room_id string) (*websocket.Conn, *websocket.Conn, error) {
+// The return bool indicates if the error is fatal to owner
+func (c *Connections) getRoom(room_id string) (*websocket.Conn, *websocket.Conn, bool, error) {
 	c.mutex.Lock()
 	if _, found := c.index[room_id]; found == false {
 		c.mutex.Unlock()
 		err := errors.New(fmt.Sprintf("Cannot get room_id: %s because it does not exist in index.", room_id))
 		log.Println(err.Error())
-		return nil, nil, err
+		return nil, nil, true, err
 	}
 	owner := c.index[room_id].owner
 	target := c.index[room_id].target
@@ -79,9 +105,9 @@ func (c *Connections) getRoom(room_id string) (*websocket.Conn, *websocket.Conn,
 	if target == nil {
 		err := errors.New(fmt.Sprintf("Cannot get room_id: %s because target was not assigned.", room_id))
 		log.Println(err.Error())
-		return nil, nil, err
+		return nil, nil, false, err
 	}
-	return owner, target, nil
+	return owner, target, false, nil
 }
 
 func (c *Connections) checkRoom(room_id string) bool {
