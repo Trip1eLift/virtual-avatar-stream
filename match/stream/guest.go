@@ -59,7 +59,6 @@ func HandleGuest(conn *websocket.Conn, request *http.Request, port string) error
 
 	// 3.1 Find target instance IP
 	// TODO: locate instance IP from database
-	// TODO: check if room_id is not in self
 	owner_ip := os.Getenv("SIBILING_IP")
 	log.Printf("Owner instance ip: %s\n", owner_ip)
 
@@ -103,7 +102,6 @@ func HandleGuest(conn *websocket.Conn, request *http.Request, port string) error
 
 func proxy_guest_aisle(guest *websocket.Conn, aisle *websocket.Conn) error {
 	for {
-		// TODO: return nil if guest close gracefully
 		messageType, body, err := guest.ReadMessage()
 		if err != nil {
 			err = errors.New("Proxy guest to aisle error while reading guest: " + err.Error())
@@ -122,7 +120,6 @@ func proxy_guest_aisle(guest *websocket.Conn, aisle *websocket.Conn) error {
 
 func proxy_aisle_guest(aisle *websocket.Conn, guest *websocket.Conn) error {
 	for {
-		// TODO: return nil if aisle close gracefully
 		messageType, body, err := aisle.ReadMessage()
 		if err != nil {
 			err = errors.New("Proxy aisle to guest error while reading aisle: " + err.Error())

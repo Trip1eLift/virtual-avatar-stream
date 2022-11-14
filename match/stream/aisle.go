@@ -9,8 +9,6 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// TODO: Fix guest->aisle->owner guest join leave join
-
 func HandleAisle(conn *websocket.Conn, request *http.Request) error {
 	if request.Header["Sec-Websocket-Protocol"][0] != "aisle" {
 		return nil
@@ -60,7 +58,6 @@ func Proxy_target_owner(room_id string) error {
 	}
 
 	for {
-		// TODO: return nil if target close gracefully
 		messageType, body, err := targetConn.ReadMessage()
 		if err != nil {
 			log.Println(err.Error())
