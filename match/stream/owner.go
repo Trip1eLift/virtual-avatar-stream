@@ -30,11 +30,17 @@ func HandleOwner(conn *websocket.Conn, request *http.Request) error {
 		return err
 	}
 
-	// 4. Enter owner reader
+	// 4. Remove room_id from cache when connection closes
+	handleClose := conn.CloseHandler()
+	conn.SetCloseHandler(func(code int, text string) error {
+		ConnectionCache.removeRoom(room_id)
+		return handleClose(code, text)
+	})
+
+	// 5. Enter owner reader
 	// Dynamically find (aisle/guest) conn
 	// - Read from owner and write to (aisle/guest)
 	// - Write to owner will be triggered by (aisle/guest)
-	// 5. Remove room_id from cache when connection closes
 	proxy_owner_target(room_id)
 
 	return nil
@@ -43,14 +49,12 @@ func HandleOwner(conn *websocket.Conn, request *http.Request) error {
 func proxy_owner_target(room_id string) error {
 	for {
 		// wait when there's no target
-		log.Println("DEBUG waiting...")
+		log.Println("Owner waiting for target...")
 		term, err := ConnectionCache.waitRoom(room_id)
 		if err != nil {
-			ConnectionCache.removeRoom(room_id)
 			return err
 		} else if term {
 			// Owner left before target joins
-			ConnectionCache.removeRoom(room_id)
 			return nil
 		}
 
@@ -59,8 +63,7 @@ func proxy_owner_target(room_id string) error {
 			if fatal == false {
 				continue // If target join and leave
 			} else {
-				ConnectionCache.removeRoom(room_id)
-				return err
+				return err // If get room crashes with a fatal error
 			}
 		}
 
@@ -68,7 +71,6 @@ func proxy_owner_target(room_id string) error {
 			messageType, body, err := ownerConn.ReadMessage()
 			if err != nil {
 				log.Println(err.Error())
-				ConnectionCache.removeRoom(room_id)
 				return err
 			}
 

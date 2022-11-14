@@ -13,10 +13,11 @@ import (
 )
 
 func HandleGuest(conn *websocket.Conn, request *http.Request, port string) error {
-	// 1. Establish client-guest connection and retrieve room_id as int
 	if request.Header["Sec-Websocket-Protocol"][0] != "guest" {
 		return nil
 	}
+
+	// 1. Establish client-guest connection and retrieve room_id as int
 	room_id_str, err := Demand(conn, "Room-Id")
 	if err != nil {
 		return err
@@ -35,11 +36,20 @@ func HandleGuest(conn *websocket.Conn, request *http.Request, port string) error
 	// - Read from guest and write to owner
 	// - Write to guest will be triggered by owner
 	if ConnectionCache.checkRoom(room_id_str) {
-		// 2.1 Enter guest-owner reader
+		// 2.1 Save guest conn for owner
 		err = ConnectionCache.addTarget(room_id_str, conn)
 		if err != nil {
 			return err
 		}
+
+		// 2.2 Remove guest from cache when connection closes
+		handleClose := conn.CloseHandler()
+		conn.SetCloseHandler(func(code int, text string) error {
+			ConnectionCache.removeTarget(room_id_str)
+			return handleClose(code, text)
+		})
+
+		// 2.3 Enter guest-owner reader
 		Proxy_target_owner(room_id_str)
 
 		return nil
@@ -71,7 +81,16 @@ func HandleGuest(conn *websocket.Conn, request *http.Request, port string) error
 		return err
 	}
 
-	// 3.3 Enter guest-asile reader
+	// 3.3 Closes guest-aisle when connection client-guest closes
+	handleClose := conn.CloseHandler()
+	conn.SetCloseHandler(func(code int, text string) error {
+		log.Println("DEBUG client-guest is down, cascading to guest-aisle.")
+		aisle_conn.WriteMessage(websocket.CloseMessage,
+			websocket.FormatCloseMessage(websocket.CloseGoingAway, "client-guest is down, cascading to guest-aisle."))
+		return handleClose(code, text)
+	})
+
+	// 3.4 Enter guest-asile reader
 	// Go routine
 	// - Read from guest and write to aisle
 	// - Read from aisle and write to guest
@@ -87,14 +106,14 @@ func proxy_guest_aisle(guest *websocket.Conn, aisle *websocket.Conn) error {
 		// TODO: return nil if guest close gracefully
 		messageType, body, err := guest.ReadMessage()
 		if err != nil {
-			err = errors.New("Proxy guest to aisle error, reading guest: " + err.Error())
+			err = errors.New("Proxy guest to aisle error while reading guest: " + err.Error())
 			log.Println(err.Error())
 			return err
 		}
 
 		err = aisle.WriteMessage(messageType, body)
 		if err != nil {
-			err = errors.New("Proxy guest to aisle error, writing aisle: " + err.Error())
+			err = errors.New("Proxy guest to aisle error while writing aisle: " + err.Error())
 			log.Println(err.Error())
 			return err
 		}
@@ -106,14 +125,14 @@ func proxy_aisle_guest(aisle *websocket.Conn, guest *websocket.Conn) error {
 		// TODO: return nil if aisle close gracefully
 		messageType, body, err := aisle.ReadMessage()
 		if err != nil {
-			err = errors.New("Proxy aisle to guest error, reading aisle: " + err.Error())
+			err = errors.New("Proxy aisle to guest error while reading aisle: " + err.Error())
 			log.Println(err.Error())
 			return err
 		}
 
 		err = guest.WriteMessage(messageType, body)
 		if err != nil {
-			err = errors.New("Proxy aisle to guest error, writing guest: " + err.Error())
+			err = errors.New("Proxy aisle to guest error while writing guest: " + err.Error())
 			log.Println(err.Error())
 			return err
 		}
