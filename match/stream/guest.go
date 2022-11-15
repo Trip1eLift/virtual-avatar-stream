@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"strconv"
 
 	"github.com/gorilla/websocket"
 )
@@ -18,26 +17,20 @@ func HandleGuest(conn *websocket.Conn, request *http.Request, port string) error
 	}
 
 	// 1. Establish client-guest connection and retrieve room_id as int
-	room_id_str, err := Demand(conn, "Room-Id")
+	room_id, err := Demand(conn, "Room-Id")
 	if err != nil {
 		return err
 	}
-	room_id, err := strconv.Atoi(room_id_str)
-	if err != nil {
-		err = errors.New("Guest room_id type cast error: " + err.Error())
-		log.Println(err.Error())
-		return err
-	}
-	log.Printf("Guest join room_id: %d\n", room_id)
+	log.Printf("Guest join room_id: %s\n", room_id)
 
 	// 2. Handle if room_id is at this instance
 	// Find owner conn
 	// Enter guest-owner reader
 	// - Read from guest and write to owner
 	// - Write to guest will be triggered by owner
-	if ConnectionCache.checkRoom(room_id_str) {
+	if ConnectionCache.checkRoom(room_id) {
 		// 2.1 Save guest conn for owner
-		err = ConnectionCache.addTarget(room_id_str, conn)
+		err = ConnectionCache.addTarget(room_id, conn)
 		if err != nil {
 			return err
 		}
@@ -45,12 +38,12 @@ func HandleGuest(conn *websocket.Conn, request *http.Request, port string) error
 		// 2.2 Remove guest from cache when connection closes
 		handleClose := conn.CloseHandler()
 		conn.SetCloseHandler(func(code int, text string) error {
-			ConnectionCache.removeTarget(room_id_str)
+			ConnectionCache.removeTarget(room_id)
 			return handleClose(code, text)
 		})
 
 		// 2.3 Enter guest-owner reader
-		Proxy_target_owner(room_id_str)
+		Proxy_target_owner(room_id)
 
 		return nil
 	}
@@ -76,20 +69,27 @@ func HandleGuest(conn *websocket.Conn, request *http.Request, port string) error
 	if err = Supply(aisle_conn, "Authorization", os.Getenv("AISLE_KEY")); err != nil {
 		return err
 	}
-	if err = Supply(aisle_conn, "Room-Id", room_id_str); err != nil {
+	if err = Supply(aisle_conn, "Room-Id", room_id); err != nil {
 		return err
 	}
 
 	// 3.3 Closes guest-aisle when connection client-guest closes
-	handleClose := conn.CloseHandler()
+	guestDefaultClose := conn.CloseHandler()
 	conn.SetCloseHandler(func(code int, text string) error {
-		log.Println("DEBUG client-guest is down, cascading to guest-aisle.")
 		aisle_conn.WriteMessage(websocket.CloseMessage,
 			websocket.FormatCloseMessage(websocket.CloseGoingAway, "client-guest is down, cascading to guest-aisle."))
-		return handleClose(code, text)
+		return guestDefaultClose(code, text)
 	})
 
-	// 3.4 Enter guest-asile reader
+	// 3.4 Closes guest-client when connection aisle-guest closes
+	aisleDefaultClose := aisle_conn.CloseHandler()
+	aisle_conn.SetCloseHandler(func(code int, text string) error {
+		conn.WriteMessage(websocket.CloseMessage,
+			websocket.FormatCloseMessage(websocket.CloseGoingAway, "aisle-guest is down, cascading to guest-client."))
+		return aisleDefaultClose(code, text)
+	})
+
+	// 3.5 Enter guest-asile reader
 	// Go routine
 	// - Read from guest and write to aisle
 	// - Read from aisle and write to guest

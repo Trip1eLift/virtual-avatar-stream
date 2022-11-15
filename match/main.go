@@ -13,11 +13,6 @@ import (
 const ip = "0.0.0.0"
 const port = "5000"
 
-var DB_USER = os.Getenv("DB_USER")
-var DB_HOST = os.Getenv("DB_HOST")
-var DB_PASS = os.Getenv("DB_PASS")
-var DB_PORT = os.Getenv("DB_PORT")
-
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
@@ -50,10 +45,14 @@ func wsEndpoint(write http.ResponseWriter, request *http.Request) {
 }
 
 func main() {
+	stream.SetIp(os.Getenv("SELF_IP"))
+
 	http.HandleFunc("/", wsEndpoint)
 	http.HandleFunc("/health", func(write http.ResponseWriter, request *http.Request) {
 		log.Println("Host Address:", request.Host)
 		log.Println("Remote Address:", request.RemoteAddr)
+		stream.Fetch_unique_room_id()
+		stream.Health_database()
 		log.Println("Healthy.")
 		fmt.Fprintf(write, "Healthy.\n")
 	})

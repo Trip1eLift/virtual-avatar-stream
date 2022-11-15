@@ -17,7 +17,7 @@ type ConnectionRoom struct {
 
 type Connections struct {
 	index map[string]*ConnectionRoom
-	mutex sync.Mutex
+	mutex sync.RWMutex
 }
 
 func (c *Connections) addRoom(room_id string, owner *websocket.Conn) error {
@@ -46,6 +46,11 @@ func (c *Connections) removeRoom(room_id string) error {
 		log.Println(err.Error())
 		return err
 	}
+	if targetConn := c.index[room_id].target; targetConn != nil {
+		// close target connection gracefully
+		targetConn.WriteMessage(websocket.CloseMessage,
+			websocket.FormatCloseMessage(websocket.CloseGoingAway, "client-owner is down, cascading to owner-target."))
+	}
 	delete(c.index, room_id)
 	c.mutex.Unlock()
 	return nil
@@ -53,16 +58,16 @@ func (c *Connections) removeRoom(room_id string) error {
 
 func (c *Connections) waitRoom(room_id string) (bool, error) {
 	terminate := false
-	c.mutex.Lock()
+	c.mutex.RLock()
 	if _, found := c.index[room_id]; found == false {
-		c.mutex.Unlock()
+		c.mutex.RUnlock()
 		err := errors.New(fmt.Sprintf("Cannot wait on room_id: %s because it does not exist in index.", room_id))
 		log.Println(err.Error())
 		return terminate, err
 	}
 	owner := c.index[room_id].owner
 	wait := c.index[room_id].wait
-	c.mutex.Unlock()
+	c.mutex.RUnlock()
 
 	// Catch if owner close connection before any target appears
 	quit := make(chan bool)
@@ -103,30 +108,30 @@ func (c *Connections) waitRoom(room_id string) (bool, error) {
 }
 
 func (c *Connections) getTarget(room_id string) (*websocket.Conn, error) {
-	c.mutex.Lock()
+	c.mutex.RLock()
 	room := c.index[room_id]
 	if room == nil || room.target == nil {
-		c.mutex.Unlock()
+		c.mutex.RUnlock()
 		err := errors.New(fmt.Sprintf("Cannot get target from room_id: %s", room_id))
 		log.Println(err.Error())
 		return nil, err
 	}
-	c.mutex.Unlock()
+	c.mutex.RUnlock()
 	return room.target, nil
 }
 
 // The return bool indicates if the error is fatal to owner
 func (c *Connections) getRoom(room_id string) (*websocket.Conn, *websocket.Conn, bool, error) {
-	c.mutex.Lock()
+	c.mutex.RLock()
 	if _, found := c.index[room_id]; found == false {
-		c.mutex.Unlock()
+		c.mutex.RUnlock()
 		err := errors.New(fmt.Sprintf("Cannot get room_id: %s because it does not exist in index.", room_id))
 		log.Println(err.Error())
 		return nil, nil, true, err
 	}
 	owner := c.index[room_id].owner
 	target := c.index[room_id].target
-	c.mutex.Unlock()
+	c.mutex.RUnlock()
 	if target == nil {
 		err := errors.New(fmt.Sprintf("Cannot get room_id: %s because target was not assigned.", room_id))
 		log.Println(err.Error())
@@ -136,9 +141,9 @@ func (c *Connections) getRoom(room_id string) (*websocket.Conn, *websocket.Conn,
 }
 
 func (c *Connections) checkRoom(room_id string) bool {
-	c.mutex.Lock()
+	c.mutex.RLock()
 	_, found := c.index[room_id]
-	c.mutex.Unlock()
+	c.mutex.RUnlock()
 	return found
 }
 

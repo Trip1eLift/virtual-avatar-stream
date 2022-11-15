@@ -26,9 +26,10 @@ services:
       - DB_HOST=postgres_container
       - DB_PASS=postgres_password
       - DB_PORT=5432
+      - DB_NAME=POSTGRES_USER
       - ORIGIN=http://localhost:3000
       - AISLE_KEY=passcode
-      - SIBILING_IP=172.16.238.12
+      - SELF_IP=172.16.238.11
     networks:
       app_net:
         ipv4_address: 172.16.238.11
@@ -49,9 +50,10 @@ services:
       - DB_HOST=postgres_container
       - DB_PASS=postgres_password
       - DB_PORT=5432
+      - DB_NAME=POSTGRES_USER
       - ORIGIN=http://localhost:3000
       - AISLE_KEY=passcode
-      - SIBILING_IP=172.16.238.11
+      - SELF_IP=172.16.238.12
     networks:
       app_net:
         ipv4_address: 172.16.238.12
