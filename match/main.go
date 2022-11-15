@@ -51,10 +51,16 @@ func main() {
 	http.HandleFunc("/health", func(write http.ResponseWriter, request *http.Request) {
 		log.Println("Host Address:", request.Host)
 		log.Println("Remote Address:", request.RemoteAddr)
-		stream.Fetch_unique_room_id()
-		stream.Health_database()
+		//stream.Fetch_unique_room_id()
 		log.Println("Healthy.")
 		fmt.Fprintf(write, "Healthy.\n")
+	})
+	http.HandleFunc("/database", func(write http.ResponseWriter, _ *http.Request) {
+		if reply, err := stream.Health_database(); err != nil {
+			fmt.Fprintf(write, err.Error())
+		} else {
+			fmt.Fprintf(write, reply)
+		}
 	})
 	log.Printf("Listening on %s:%s\n", ip, port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%s", ip, port), nil))

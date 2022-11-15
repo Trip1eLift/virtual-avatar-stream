@@ -14,7 +14,7 @@ services:
       - match
     command: npm run dev
   match:
-    container_name: match
+    container_name: match1
     build: ./match
     ports:
       - 5000:5000
@@ -23,18 +23,18 @@ services:
       - ./match:/app/
     environment:
       - DB_USER=postgres_user
-      - DB_HOST=postgres_container
+      - DB_HOST=postgres_service
       - DB_PASS=postgres_password
       - DB_PORT=5432
-      - DB_NAME=POSTGRES_USER
+      - DB_NAME=postgres_user # default db name if not set
       - ORIGIN=http://localhost:3000
       - AISLE_KEY=passcode
-      - SELF_IP=172.16.238.11
-    networks:
-      app_net:
-        ipv4_address: 172.16.238.11
+      - SELF_IP=match
+    # networks:
+    #   app_net:
+    #     ipv4_address: 172.16.238.11
     depends_on:
-      - postgres
+      - postgres_service
     tty: true
     command: nodemon --exec 'go run main.go | echo "crashed"' --signal SIGTERM --legacy-watch --ext .go,.mod,.sum
   match2:
@@ -47,22 +47,22 @@ services:
       - ./match:/app/
     environment:
       - DB_USER=postgres_user
-      - DB_HOST=postgres_container
+      - DB_HOST=postgres_service
       - DB_PASS=postgres_password
       - DB_PORT=5432
-      - DB_NAME=POSTGRES_USER
+      - DB_NAME=postgres_user # default db name if not set
       - ORIGIN=http://localhost:3000
       - AISLE_KEY=passcode
-      - SELF_IP=172.16.238.12
-    networks:
-      app_net:
-        ipv4_address: 172.16.238.12
+      - SELF_IP=match2
+    # networks:
+    #   app_net:
+    #     ipv4_address: 172.16.238.12
     depends_on:
-      - postgres
+      - postgres_service
     tty: true
     command: nodemon --exec 'go run main.go | echo "crashed"' --signal SIGTERM --legacy-watch --ext .go,.mod,.sum
-  postgres:
-    container_name: postgres_container
+  postgres_service:
+    container_name: postgres
     image: postgres:14.1-alpine
     restart: always
     environment:
@@ -76,10 +76,10 @@ services:
 volumes:
   postgres:
     driver: local
-networks:
-  app_net:
-    driver: bridge
-    ipam:
-      driver: default
-      config:
-        - subnet: "172.16.238.0/24"
+# networks:
+#   app_net:
+#     driver: bridge
+#     ipam:
+#       driver: default
+#       config:
+#         - subnet: "172.16.238.0/24"
