@@ -6,7 +6,7 @@ const url1 = "ws://localhost:5000";
 const url2 = "ws://localhost:5001";
 let socket;
 
-function ownerConn(url) {
+function ownerConn(url, setRoomId) {
   socket = new WebSocket(url, ["owner"]);
 
   socket.onopen = async function(e) {
@@ -14,7 +14,7 @@ function ownerConn(url) {
     
     const room_id = await Demand(socket, "Room-Id");
     console.log(`Room-Id: ${room_id}`);
-    //socket.send(JSON.stringify({"Bus": "Room-Id"}));
+    setRoomId(room_id);
   };
   
   socket.onmessage = function(event) {
@@ -99,13 +99,19 @@ function Supply(conn, ask, ans) {
 }
 
 function App() {
+  const [ownerRoomId, setOwnerRoomId] = useState();
+  const [guestRoomId, setGuestRoomId] = useState();
 
   return (
     <div className="App">
-      <button onClick={(e)=>ownerConn(url1)} >Owner Sever 1</button>
-      <button onClick={(e)=>ownerConn(url2)} >Owner Sever 2</button>
-      <button onClick={(e)=>guestConn(url1, "1")} >Guest Server 1</button>
-      <button onClick={(e)=>guestConn(url2, "1")} >Guest Server 2</button>
+      <button onClick={(e)=>ownerConn(url1, setOwnerRoomId)} >Owner Sever 1</button>
+      <button onClick={(e)=>ownerConn(url2, setOwnerRoomId)} >Owner Sever 2</button>
+      <br/>
+      {ownerRoomId && <>Owner Room ID: {ownerRoomId}</>}
+      <br/>
+      <input type="text" onChange={(e)=>setGuestRoomId(e.target.value)} />
+      <button onClick={(e)=>guestConn(url1, guestRoomId)} >Guest Server 1</button>
+      <button onClick={(e)=>guestConn(url2, guestRoomId)} >Guest Server 2</button>
       <br/>
       <br/>
       <button onClick={(e)=>sendUuid()}>Send ID</button>

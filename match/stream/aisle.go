@@ -24,14 +24,15 @@ func HandleAisle(conn *websocket.Conn, request *http.Request) error {
 		log.Println(err)
 		return err
 	}
-	room_id_str, err := Demand(conn, "Room-Id")
+	room_id, err := Demand(conn, "Room-Id")
 	if err != nil {
 		return err
 	}
-	log.Printf("Aisle join room_id: %s\n", room_id_str)
+	ip, _ := GetIp()
+	log.Printf("Aisle join room_id: %s on ip: %s\n", room_id, ip)
 
 	// 2. Save aisle conn for owner
-	err = ConnectionCache.addTarget(room_id_str, conn)
+	err = ConnectionCache.addTarget(room_id, conn)
 	if err != nil {
 		return err
 	}
@@ -39,14 +40,14 @@ func HandleAisle(conn *websocket.Conn, request *http.Request) error {
 	// 3. Remove aisle from cache when connection closes
 	handleClose := conn.CloseHandler()
 	conn.SetCloseHandler(func(code int, text string) error {
-		ConnectionCache.removeTarget(room_id_str)
+		ConnectionCache.removeTarget(room_id)
 		return handleClose(code, text)
 	})
 
 	// 4. Enter aisle-owner reader
 	// - Read from aisle and write to owner
 	// - Write to aisle will be triggered by owner
-	Proxy_target_owner(room_id_str)
+	Proxy_target_owner(room_id)
 
 	return nil
 }

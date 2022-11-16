@@ -12,33 +12,44 @@ func HandleOwner(conn *websocket.Conn, request *http.Request) error {
 		return nil
 	}
 
-	// 1. Retrieve a unique room_id
-	// TODO: check database to find unique room_id
-	// TODO: register room_id with IP to the database
-	room_id := "1"
+	// 1. Retrieve an unique room_id
+	room_id, err := Fetch_unique_room_id()
+	if err != nil {
+		return err
+	}
 
-	// 2. Feed the room_id to owner client
-	err := Supply(conn, "Room-Id", room_id)
+	// 2. Register room_id with self IP
+	ip, err := GetIp()
+	if err != nil {
+		return err
+	}
+	err = Save_room_id_with_ip(room_id, ip)
+	if err != nil {
+		return err
+	}
+
+	// 3. Feed the room_id to owner client
+	err = Supply(conn, "Room-Id", room_id)
 	if err != nil {
 		return err
 	}
 	log.Printf("Owner host room_id: %s", room_id)
 
-	// 3. Save owner conn for (aisle/guest)
+	// 4. Save owner conn for (aisle/guest)
 	err = ConnectionCache.addRoom(room_id, conn)
 	if err != nil {
 		return err
 	}
 
-	// 4. Remove room_id from cache when connection closes
+	// 5. Remove room_id from cache when connection closes
 	handleClose := conn.CloseHandler()
 	conn.SetCloseHandler(func(code int, text string) error {
 		ConnectionCache.removeRoom(room_id)
-		// TODO: Remove room_id from database
+		Remove_room_id(room_id)
 		return handleClose(code, text)
 	})
 
-	// 5. Enter owner reader
+	// 6. Enter owner reader
 	// Dynamically find (aisle/guest) conn
 	// - Read from owner and write to (aisle/guest)
 	// - Write to owner will be triggered by (aisle/guest)

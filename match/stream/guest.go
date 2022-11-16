@@ -51,8 +51,15 @@ func HandleGuest(conn *websocket.Conn, request *http.Request, port string) error
 	// 3. Handle if room_id is at a different instance
 
 	// 3.1 Find target instance IP
-	// TODO: locate instance IP from database
-	owner_ip := os.Getenv("SIBILING_IP")
+	owner_ip, fatal, err := Fetch_ip_from_room_id(room_id)
+	if err != nil {
+		if fatal == false {
+			conn.WriteMessage(websocket.CloseMessage,
+				websocket.FormatCloseMessage(websocket.CloseGoingAway, "invalid room_id, shutdown client-guest connection."))
+			return nil
+		}
+		return err
+	}
 	log.Printf("Owner instance ip: %s\n", owner_ip)
 
 	// 3.2 Establish proxy of guest-aisle and feed AISLE_KEY and room_id
