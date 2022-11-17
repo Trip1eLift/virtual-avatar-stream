@@ -1,7 +1,6 @@
 package stream
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -51,13 +50,19 @@ func Start() {
 	http.HandleFunc("/", wsEndpoint)
 
 	http.HandleFunc("/health", func(write http.ResponseWriter, request *http.Request) {
-		log.Println("Host Address:", request.Host)
-		log.Println("Remote Address:", request.RemoteAddr)
-		nextRoom, err := DB.fetch_unique_room_id()
-		if err != nil {
-			panic(errors.New("Health check failed with error: " + err.Error()))
-		}
-		message := fmt.Sprintf("Healthy. %s\n", nextRoom)
+		// nextRoom, err := DB.fetch_unique_room_id()
+		self_ip, _ := IP.getIp()
+		// if err != nil {
+		// 	panic(errors.New("Health check failed with error: " + err.Error()))
+		// }
+		message := fmt.Sprintf("Healthy. private self IP: %s.\n", self_ip)
+		log.Print(message)
+		fmt.Fprintf(write, message)
+	})
+
+	http.HandleFunc("/internal-health", func(write http.ResponseWriter, request *http.Request) {
+		IP.setIp(request.Host)
+		message := fmt.Sprintf("internal health check.")
 		log.Print(message)
 		fmt.Fprintf(write, message)
 	})
