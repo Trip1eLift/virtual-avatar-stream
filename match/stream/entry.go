@@ -51,7 +51,7 @@ func Start() {
 
 	http.HandleFunc("/", wsEndpoint)
 
-	// TODO: make a proxy-health endpoint to test client->instance->instance connection
+	// TODO: make a proxy-health endpoint to test client->fargate->fargate connection
 
 	http.HandleFunc("/health", func(write http.ResponseWriter, request *http.Request) {
 		self_ip, _ := IP.getIp()
