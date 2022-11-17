@@ -44,17 +44,17 @@ func wsEndpoint(write http.ResponseWriter, request *http.Request) {
 }
 
 func Start() {
-	// TODO: set self IP in a different way on deployment
-	IP.setIp(os.Getenv("SELF_IP"))
+	if os.Getenv("SELF_IP") != "" {
+		// SELF_IP should only be set in local
+		IP.setIp(os.Getenv("SELF_IP"))
+	}
 
 	http.HandleFunc("/", wsEndpoint)
 
+	// TODO: make a proxy-health endpoint to test client->instance->instance connection
+
 	http.HandleFunc("/health", func(write http.ResponseWriter, request *http.Request) {
-		// nextRoom, err := DB.fetch_unique_room_id()
 		self_ip, _ := IP.getIp()
-		// if err != nil {
-		// 	panic(errors.New("Health check failed with error: " + err.Error()))
-		// }
 		message := fmt.Sprintf("Healthy. private self IP: %s.\n", self_ip)
 		log.Print(message)
 		fmt.Fprintf(write, message)
