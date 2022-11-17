@@ -17,7 +17,7 @@ func HandleGuest(conn *websocket.Conn, request *http.Request, port string) error
 	}
 
 	// 1. Establish client-guest connection and retrieve room_id as int
-	room_id, err := Demand(conn, "Room-Id")
+	room_id, err := TM.demand(conn, "Room-Id")
 	if err != nil {
 		return err
 	}
@@ -51,7 +51,7 @@ func HandleGuest(conn *websocket.Conn, request *http.Request, port string) error
 	// 3. Handle if room_id is at a different instance
 
 	// 3.1 Find target instance IP
-	owner_ip, fatal, err := Fetch_ip_from_room_id(room_id)
+	owner_ip, fatal, err := DB.fetch_ip_from_room_id(room_id)
 	if err != nil {
 		if fatal == false {
 			conn.WriteMessage(websocket.CloseMessage,
@@ -73,10 +73,10 @@ func HandleGuest(conn *websocket.Conn, request *http.Request, port string) error
 		log.Println(err.Error())
 		return err
 	}
-	if err = Supply(aisle_conn, "Authorization", os.Getenv("AISLE_KEY")); err != nil {
+	if err = TM.supply(aisle_conn, "Authorization", os.Getenv("AISLE_KEY")); err != nil {
 		return err
 	}
-	if err = Supply(aisle_conn, "Room-Id", room_id); err != nil {
+	if err = TM.supply(aisle_conn, "Room-Id", room_id); err != nil {
 		return err
 	}
 

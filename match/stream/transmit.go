@@ -12,9 +12,12 @@ type Payload struct {
 	Bus string
 }
 
+type Transmit struct {
+}
+
 // Write then wait on read
 // Make sure ask follows the http header format
-func Demand(conn *websocket.Conn, ask string) (string, error) {
+func (t *Transmit) demand(conn *websocket.Conn, ask string) (string, error) {
 	pack := Payload{Bus: ask}
 	body, err := json.Marshal(pack)
 	if err != nil {
@@ -49,7 +52,7 @@ func Demand(conn *websocket.Conn, ask string) (string, error) {
 
 // Wait on read then write
 // Make sure ask follows the http header format
-func Supply(conn *websocket.Conn, ask string, ans string) error {
+func (t *Transmit) supply(conn *websocket.Conn, ask string, ans string) error {
 	_, body, err := conn.ReadMessage()
 	if err != nil {
 		err = errors.New("Supply read error: " + err.Error())
@@ -89,3 +92,5 @@ func Supply(conn *websocket.Conn, ask string, ans string) error {
 	}
 	return nil
 }
+
+var TM = Transmit{}

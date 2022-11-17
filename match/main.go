@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-	stream.Entry()
+	stream.Start()
 }

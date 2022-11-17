@@ -20,7 +20,10 @@ var (
 	psqlconn   = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", dbhost, dbport, dbuser, dbpassword, dbname)
 )
 
-func Save_room_id_with_ip(room_id string, ip string) error {
+type Database struct {
+}
+
+func (d *Database) save_room_id_with_ip(room_id string, ip string) error {
 	db, err := sql.Open("postgres", psqlconn)
 	if err != nil {
 		err = errors.New("Postgres connection error: " + err.Error())
@@ -38,7 +41,7 @@ func Save_room_id_with_ip(room_id string, ip string) error {
 	return nil
 }
 
-func Remove_room_id(room_id string) error {
+func (d *Database) remove_room_id(room_id string) error {
 	db, err := sql.Open("postgres", psqlconn)
 	if err != nil {
 		err = errors.New("Postgres connection error: " + err.Error())
@@ -56,7 +59,7 @@ func Remove_room_id(room_id string) error {
 	return nil
 }
 
-func Fetch_ip_from_room_id(room_id string) (string, bool, error) {
+func (d *Database) fetch_ip_from_room_id(room_id string) (string, bool, error) {
 	// bool marks if the error is fatal
 	db, err := sql.Open("postgres", psqlconn)
 	if err != nil {
@@ -82,7 +85,7 @@ func Fetch_ip_from_room_id(room_id string) (string, bool, error) {
 	}
 }
 
-func Fetch_unique_room_id() (string, error) {
+func (d *Database) fetch_unique_room_id() (string, error) {
 	db, err := sql.Open("postgres", psqlconn)
 	if err != nil {
 		err = errors.New("Postgres connection error: " + err.Error())
@@ -102,7 +105,7 @@ func Fetch_unique_room_id() (string, error) {
 	return room_id, nil
 }
 
-func Health_database() (string, error) {
+func (d *Database) health_database() (string, error) {
 	db, err := sql.Open("postgres", psqlconn)
 	if err != nil {
 		err = errors.New("Postgres connection error: " + err.Error())
@@ -122,16 +125,19 @@ func Health_database() (string, error) {
 	for rows.Next() {
 		var room_id string
 		var ip string
-		err = rows.Scan(&room_id, &ip)
+		var timestamp string
+		err = rows.Scan(&room_id, &ip, &timestamp)
 		if err != nil {
 			err = errors.New("Postgres row scan: " + err.Error())
 			log.Println(err.Error())
 			return "", err
 		}
-		results = append(results, []string{room_id, ip})
+		results = append(results, []string{room_id, ip, timestamp})
 	}
 	res, _ := json.Marshal(results)
 	log.Println("Database:\n", string(res))
 
 	return string(res), nil
 }
+
+var DB = Database{}

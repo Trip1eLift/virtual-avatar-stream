@@ -13,23 +13,23 @@ func HandleOwner(conn *websocket.Conn, request *http.Request) error {
 	}
 
 	// 1. Retrieve an unique room_id
-	room_id, err := Fetch_unique_room_id()
+	room_id, err := DB.fetch_unique_room_id()
 	if err != nil {
 		return err
 	}
 
 	// 2. Register room_id with self IP
-	ip, err := GetIp()
+	ip, err := IP.getIp()
 	if err != nil {
 		return err
 	}
-	err = Save_room_id_with_ip(room_id, ip)
+	err = DB.save_room_id_with_ip(room_id, ip)
 	if err != nil {
 		return err
 	}
 
 	// 3. Feed the room_id to owner client
-	err = Supply(conn, "Room-Id", room_id)
+	err = TM.supply(conn, "Room-Id", room_id)
 	if err != nil {
 		return err
 	}
@@ -45,7 +45,7 @@ func HandleOwner(conn *websocket.Conn, request *http.Request) error {
 	handleClose := conn.CloseHandler()
 	conn.SetCloseHandler(func(code int, text string) error {
 		ConnectionCache.removeRoom(room_id)
-		Remove_room_id(room_id)
+		DB.remove_room_id(room_id)
 		return handleClose(code, text)
 	})
 

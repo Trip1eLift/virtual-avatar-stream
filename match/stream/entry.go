@@ -13,9 +13,6 @@ import (
 const ip = "0.0.0.0"
 const port = "5000"
 
-// TODO: make global functions class like
-// TODO: make room_id expired after 24 hrs
-
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
@@ -47,15 +44,16 @@ func wsEndpoint(write http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func Entry() {
-	SetIp(os.Getenv("SELF_IP"))
+func Start() {
+	// TODO: set self IP in a different way on deployment
+	IP.setIp(os.Getenv("SELF_IP"))
 
 	http.HandleFunc("/", wsEndpoint)
 
 	http.HandleFunc("/health", func(write http.ResponseWriter, request *http.Request) {
 		log.Println("Host Address:", request.Host)
 		log.Println("Remote Address:", request.RemoteAddr)
-		nextRoom, err := Fetch_unique_room_id()
+		nextRoom, err := DB.fetch_unique_room_id()
 		if err != nil {
 			panic(errors.New("Health check failed with error: " + err.Error()))
 		}
@@ -65,7 +63,7 @@ func Entry() {
 	})
 
 	http.HandleFunc("/database", func(write http.ResponseWriter, _ *http.Request) {
-		if reply, err := Health_database(); err != nil {
+		if reply, err := DB.health_database(); err != nil {
 			fmt.Fprintf(write, err.Error())
 		} else {
 			fmt.Fprintf(write, reply)

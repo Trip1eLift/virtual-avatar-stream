@@ -6,31 +6,35 @@ import (
 	"sync"
 )
 
-var IP = ""
-var IPmutex sync.RWMutex
-
-func SetIp(ip string) {
-	IPmutex.RLock()
-	if IP != "" {
-		IPmutex.RUnlock()
-		return
-	}
-	IPmutex.RUnlock()
-	IPmutex.Lock()
-	IP = ip
-	log.Printf("Set self IP to be: %s", IP)
-	IPmutex.Unlock()
+type Ip struct {
+	ip string
+	mu sync.RWMutex
 }
 
-func GetIp() (string, error) {
-	IPmutex.RLock()
-	if IP == "" {
-		IPmutex.RUnlock()
+func (i *Ip) setIp(ip string) {
+	i.mu.RLock()
+	if i.ip != "" {
+		i.mu.RUnlock()
+		return
+	}
+	i.mu.RUnlock()
+	i.mu.Lock()
+	i.ip = ip
+	log.Printf("Set self IP to be: %s", i.ip)
+	i.mu.Unlock()
+}
+
+func (i *Ip) getIp() (string, error) {
+	i.mu.RLock()
+	if i.ip == "" {
+		i.mu.RUnlock()
 		err := errors.New("Cannot retrieve self IP because it was not set.")
 		log.Println(err)
 		return "", err
 	}
-	ip := IP
-	IPmutex.RUnlock()
+	ip := i.ip
+	i.mu.RUnlock()
 	return ip, nil
 }
+
+var IP = Ip{ip: ""}

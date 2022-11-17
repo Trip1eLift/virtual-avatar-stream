@@ -15,7 +15,7 @@ func HandleAisle(conn *websocket.Conn, request *http.Request) error {
 	}
 
 	// 1. Establish guest-aisle connection, check authorization, and retrieve room_id
-	aisle_key, err := Demand(conn, "Authorization")
+	aisle_key, err := TM.demand(conn, "Authorization")
 	if err != nil {
 		return err
 	}
@@ -24,11 +24,11 @@ func HandleAisle(conn *websocket.Conn, request *http.Request) error {
 		log.Println(err)
 		return err
 	}
-	room_id, err := Demand(conn, "Room-Id")
+	room_id, err := TM.demand(conn, "Room-Id")
 	if err != nil {
 		return err
 	}
-	ip, _ := GetIp()
+	ip, _ := IP.getIp()
 	log.Printf("Aisle join room_id: %s on ip: %s\n", room_id, ip)
 
 	// 2. Save aisle conn for owner
