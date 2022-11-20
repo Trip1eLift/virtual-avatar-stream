@@ -65,8 +65,7 @@ resource "aws_ecs_service" "main" {
 	network_configuration {
 		security_groups  = [ aws_security_group.ecs_service.id ]
 		subnets          = flatten(aws_subnet.private.*.id)
-		# TODO: set public ip to false after testing
-		assign_public_ip = true
+		assign_public_ip = false
 	}
 	
 	load_balancer {
