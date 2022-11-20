@@ -51,3 +51,13 @@ variable "aws_account_id" {
 	type = string
 	description = "aws account id for deployment"
 }
+
+variable "database_settings" {
+	type = map
+	description = "settings of database"
+}
+
+variable "frontend_origin" {
+	type = string
+	description = "allowed origin of frontend for websocket connections"
+}

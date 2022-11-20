@@ -5,7 +5,7 @@ resource "aws_lb" "main" {
   name               = "${var.name}-${var.environment}-alb"
   internal           = false
   load_balancer_type = "application"
-  security_groups    = [ aws_security_group.ecs_tasks.id ]
+  security_groups    = [ aws_security_group.alb.id ]
   subnets            = flatten(aws_subnet.public.*.id)
 
   enable_deletion_protection = false
@@ -54,19 +54,6 @@ resource "aws_alb_listener" "https" {
 
   ssl_policy        = "ELBSecurityPolicy-2016-08"
   certificate_arn   = aws_acm_certificate_validation.main.certificate_arn
-
-  default_action {
-    target_group_arn = aws_alb_target_group.main.id
-    type             = "forward"
-  }
-}
-
-# TODO: remove this after testing
-# this is only for testing
-resource "aws_alb_listener" "test" {
-  load_balancer_arn = aws_lb.main.id
-  port              = 5000
-  protocol          = "HTTP"
 
   default_action {
     target_group_arn = aws_alb_target_group.main.id

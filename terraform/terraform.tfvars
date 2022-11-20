@@ -20,3 +20,13 @@ common_tags = {
 }
 
 aws_account_id = "201843717406"
+
+# TODO: Update database_settings
+database_settings = {
+	DB_HOST = "postgres_service"
+	DB_USER = "postgres_user"
+	DB_NAME = "virtual-avatar-aurora-serverless-postgres"
+	DB_PORT = 5432
+}
+
+frontend_origin = "http://localhost:3000"

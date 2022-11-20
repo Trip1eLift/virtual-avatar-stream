@@ -28,6 +28,8 @@ func wsEndpoint(write http.ResponseWriter, request *http.Request) {
 
 	//log.Println("Client Successfully Connected...")
 
+	// TODO: close connection if self IP was not set
+
 	if err := HandleOwner(ws, request); err != nil {
 		log.Printf("Owner error")
 	}

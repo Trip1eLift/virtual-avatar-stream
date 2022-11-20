@@ -4,7 +4,7 @@ resource "aws_ecs_cluster" "main" {
 }
 
 resource "aws_ecs_task_definition" "main" {
-	family                   = "${var.name}-${var.environment}-family"
+	family                   = "${var.name}-${var.environment}"
 	network_mode             = "awsvpc"
 	requires_compatibilities = ["FARGATE"]
 	cpu                      = 256
@@ -15,7 +15,16 @@ resource "aws_ecs_task_definition" "main" {
 		name        = "${var.name}-${var.environment}-container"
 		image       = "${aws_ecr_repository.main.repository_url}:latest"
 		essential   = true
-		environment = [{"name": "environment", "value": "${var.environment}"}]
+		environment = [
+			{"name": "environment", "value": "${var.environment}"},
+			{"name": "DB_HOST",     "value": "${var.database_settings.DB_HOST}"},
+			{"name": "DB_USER",     "value": "${var.database_settings.DB_USER}"},
+			{"name": "DB_NAME",     "value": "${var.database_settings.DB_NAME}"},
+			{"name": "DB_PORT",     "value": "${var.database_settings.DB_PORT}"},
+			{"name": "DB_PASS",     "value": "postgres_password"},       # TODO: use AWS secret manager later
+			{"name": "ORIGIN",      "value": "${var.frontend_origin}"},
+			{"name": "AISLE_KEY",   "value": "passcode"},                # TODO: use AWS secret manager later
+		]
 		portMappings = [{
 			protocol      = "tcp"
 			containerPort = var.container_port
@@ -28,7 +37,7 @@ resource "aws_ecs_task_definition" "main" {
 		# 	timeout     = 3
 		# 	interval    = 5
 		# 	startPeriod = 5
-    	# }
+		# }
 		logConfiguration = {
 			logDriver = "awslogs"
 			options   = {
@@ -54,8 +63,8 @@ resource "aws_ecs_service" "main" {
 	force_new_deployment               = true
 
 	network_configuration {
-		security_groups  = [ aws_security_group.ecs_tasks.id ]
-  	subnets          = flatten(aws_subnet.public.*.id)
+		security_groups  = [ aws_security_group.ecs_service.id ]
+		subnets          = flatten(aws_subnet.private.*.id)
 		# TODO: set public ip to false after testing
 		assign_public_ip = true
 	}

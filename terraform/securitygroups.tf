@@ -1,6 +1,7 @@
 resource "aws_security_group" "alb" {
-  name   = "${var.name}-${var.environment}-sg-alb"
-  vpc_id = aws_vpc.main.id
+  name        = "${var.name}-${var.environment}-alb-sg"
+  description = "For alb"
+  vpc_id      = aws_vpc.main.id
  
   ingress {
    protocol         = "tcp"
@@ -29,9 +30,10 @@ resource "aws_security_group" "alb" {
 	tags = var.common_tags
 }
 
-resource "aws_security_group" "ecs_tasks" {
-	name   = "${var.name}-${var.environment}-sg"
-	vpc_id = aws_vpc.main.id
+resource "aws_security_group" "ecs_service" {
+	name        = "${var.name}-${var.environment}-ecs-sg"
+  description = "For ecs service"
+	vpc_id      = aws_vpc.main.id
 	
 	ingress {
 		protocol         = "tcp"
@@ -51,4 +53,21 @@ resource "aws_security_group" "ecs_tasks" {
 	}
 
 	tags = var.common_tags
+}
+
+# TODO: figure out where to attach this
+resource "aws_security_group" "aurora" {
+  name        = "${var.name}-${var.environment}-aurora-sg"
+  description = "For aurora"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+		protocol         = "tcp"
+		from_port        = var.container_port # TODO: replace this
+		to_port          = var.container_port # TODO: replace this
+		cidr_blocks      = ["0.0.0.0/0"]
+		ipv6_cidr_blocks = ["::/0"]
+	}
+
+  tags = var.common_tags
 }
