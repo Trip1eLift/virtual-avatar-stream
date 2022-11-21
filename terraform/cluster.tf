@@ -17,10 +17,10 @@ resource "aws_ecs_task_definition" "main" {
 		essential   = true
 		environment = [
 			{"name": "environment", "value": "${var.environment}"},
-			{"name": "DB_HOST",     "value": "${var.database_settings.DB_HOST}"},
-			{"name": "DB_USER",     "value": "${var.database_settings.DB_USER}"},
-			{"name": "DB_NAME",     "value": "${var.database_settings.DB_NAME}"},
-			{"name": "DB_PORT",     "value": "${var.database_settings.DB_PORT}"},
+			{"name": "DB_HOST",     "value": "${aws_rds_cluster.main.endpoint}"},
+			{"name": "DB_USER",     "value": "${aws_rds_cluster.main.master_username}"},
+			{"name": "DB_NAME",     "value": "${aws_rds_cluster.main.database_name}"},
+			{"name": "DB_PORT",     "value": "${tostring(aws_rds_cluster.main.port)}"},
 			{"name": "DB_PASS",     "value": "postgres_password"},       # TODO: use AWS secret manager later
 			{"name": "ORIGIN",      "value": "${var.frontend_origin}"},
 			{"name": "AISLE_KEY",   "value": "passcode"},                # TODO: use AWS secret manager later

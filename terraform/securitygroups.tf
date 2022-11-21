@@ -63,8 +63,8 @@ resource "aws_security_group" "aurora" {
 
   ingress {
 		protocol         = "tcp"
-		from_port        = var.container_port # TODO: replace this
-		to_port          = var.container_port # TODO: replace this
+		from_port        = var.database_settings.DB_PORT
+		to_port          = var.database_settings.DB_PORT
 		cidr_blocks      = ["0.0.0.0/0"]
 		ipv6_cidr_blocks = ["::/0"]
 	}
