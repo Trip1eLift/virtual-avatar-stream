@@ -15,7 +15,7 @@ resource "aws_ecs_task_definition" "main" {
 		name        = "${var.name}-${var.environment}-container"
 		image       = "${aws_ecr_repository.main.repository_url}:latest"
 		essential   = true
-		environment = [{"name": "environment", "value": "${var.environment}"}]
+		environment = [{"name": "environment", "value": "${var.environment}"}] # TODO: update environment to database once it's deployed
 		portMappings = [{
 			protocol      = "tcp"
 			containerPort = var.container_port
@@ -23,7 +23,7 @@ resource "aws_ecs_task_definition" "main" {
 		}]
 		# Healthcheck is written in Dockerfile.
 		# healthCheck = {
-		# 	command     = [ "CMD-SHELL", "curl -sf http://localhost:5000/health || exit 1" ]
+		# 	command     = [ "CMD-SHELL", "curl -sf http://localhost:5000/internal-health || exit 1" ]
 		# 	retries     = 3
 		# 	timeout     = 3
 		# 	interval    = 5

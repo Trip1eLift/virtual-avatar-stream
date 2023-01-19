@@ -51,15 +51,26 @@ func Start() {
 
 	http.HandleFunc("/", wsEndpoint)
 
-	// TODO: make a proxy-health endpoint to test client->fargate->fargate connection
-
 	http.HandleFunc("/health", func(write http.ResponseWriter, request *http.Request) {
 		self_ip, _ := IP.getIp()
-		message := fmt.Sprintf("Healthy. private self IP: %s.\n", self_ip)
+		message := fmt.Sprintf("Healthy: private self IP: %s.\n", self_ip)
 		log.Print(message)
 		fmt.Fprintf(write, message)
 	})
 
+	http.HandleFunc("/proxy-health", func(write http.ResponseWriter, request *http.Request) {
+		self_ip, _ := IP.getIp()
+		if target_ip, err := DB.fetch_an_non_self_ip(self_ip); err != nil {
+			fmt.Fprintf(write, err.Error())
+		} else {
+			message := fmt.Sprintf("Proxy Healthy: target proxy IP: %s.\n", target_ip)
+			log.Print(message)
+			fmt.Fprintf(write, message)
+		}
+	})
+
+	// This endpoint should not be hit by public
+	// TODO: check if ALB can block this
 	http.HandleFunc("/internal-health", func(write http.ResponseWriter, request *http.Request) {
 		IP.setIp(request.Host)
 		message := fmt.Sprintf("internal health check.")

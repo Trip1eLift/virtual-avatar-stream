@@ -112,6 +112,7 @@ func (d *Database) health_database() (string, error) {
 		log.Println(err.Error())
 		return "", err
 	}
+	defer db.Close()
 
 	rows, err := db.Query("SELECT * FROM rooms;")
 	if err != nil {
@@ -139,5 +140,27 @@ func (d *Database) health_database() (string, error) {
 
 	return string(res), nil
 }
+
+func (d *Database) fetch_an_non_self_ip(self_ip string) (string, error) {
+	db, err := sql.Open("postgres", psqlconn)
+	if err != nil {
+		err = errors.New("Postgres connection error: " + err.Error())
+		log.Println(err.Error())
+		return "", err
+	}
+	defer db.Close()
+
+	var target_ip string
+	err = db.QueryRow("SELECT task_private_ip FROM rooms WHERE task_private_ip!=$1 LIMIT 1;", self_ip).Scan(&target_ip)
+	if err != nil {
+		err = errors.New("Postgres query error: " + err.Error())
+		log.Println(err.Error())
+		return "", err
+	}
+
+	return target_ip, nil
+}
+
+// TODO: add a database init sequence
 
 var DB = Database{}
