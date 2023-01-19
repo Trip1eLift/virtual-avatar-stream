@@ -1,6 +1,7 @@
 package stream
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -8,6 +9,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/jackc/pgx/v5"
 	_ "github.com/lib/pq"
 )
 
@@ -18,6 +20,8 @@ var (
 	dbpassword = os.Getenv("DB_PASS")
 	dbname     = os.Getenv("DB_NAME")
 	psqlconn   = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", dbhost, dbport, dbuser, dbpassword, dbname)
+	// urlExample := "postgres://username:password@localhost:5432/database_name"
+	psqlurl = fmt.Sprintf("postgres://%s:%s@%s:%s/%s", dbuser, dbpassword, dbhost, dbport, dbname)
 )
 
 type Database struct {
@@ -29,15 +33,15 @@ type Database struct {
 // It supports multi-statements: https://stackoverflow.com/questions/38998267/how-to-execute-a-sql-file
 
 func (d *Database) save_room_id_with_ip(room_id string, ip string) error {
-	db, err := sql.Open("postgres", psqlconn)
+	conn, err := pgx.Connect(context.Background(), psqlurl)
 	if err != nil {
 		err = errors.New("Postgres connection error: " + err.Error())
 		log.Println(err.Error())
 		return err
 	}
-	defer db.Close()
+	defer conn.Close(context.Background())
 
-	_, err = db.Exec("INSERT INTO rooms(room_id, task_private_ip) VALUES($1, $2);", room_id, ip)
+	_, err = conn.Exec(context.Background(), "INSERT INTO rooms(room_id, task_private_ip) VALUES($1, $2);", room_id, ip)
 	if err != nil {
 		err = errors.New("Postgres exec error: " + err.Error())
 		log.Println(err.Error())
