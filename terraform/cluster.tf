@@ -4,7 +4,7 @@ resource "aws_ecs_cluster" "main" {
 }
 
 resource "aws_ecs_task_definition" "main" {
-	family                   = "${var.name}-${var.environment}-family"
+	family                   = "${var.name}-${var.environment}"
 	network_mode             = "awsvpc"
 	requires_compatibilities = ["FARGATE"]
 	cpu                      = 256
@@ -15,7 +15,16 @@ resource "aws_ecs_task_definition" "main" {
 		name        = "${var.name}-${var.environment}-container"
 		image       = "${aws_ecr_repository.main.repository_url}:latest"
 		essential   = true
-		environment = [{"name": "environment", "value": "${var.environment}"}] # TODO: update environment to database once it's deployed
+		environment = [
+			{"name": "environment", "value": "${var.environment}"},
+			{"name": "DB_HOST",     "value": "${aws_rds_cluster.main.endpoint}"},
+			{"name": "DB_USER",     "value": "${aws_rds_cluster.main.master_username}"},
+			{"name": "DB_NAME",     "value": "${aws_rds_cluster.main.database_name}"},
+			{"name": "DB_PORT",     "value": "${tostring(aws_rds_cluster.main.port)}"},
+			{"name": "DB_PASS",     "value": "postgres_password"},       # TODO: use AWS secret manager later
+			{"name": "ORIGIN",      "value": "${var.frontend_origin}"},
+			{"name": "AISLE_KEY",   "value": "passcode"},                # TODO: use AWS secret manager later
+		]
 		portMappings = [{
 			protocol      = "tcp"
 			containerPort = var.container_port
@@ -23,12 +32,12 @@ resource "aws_ecs_task_definition" "main" {
 		}]
 		# Healthcheck is written in Dockerfile.
 		# healthCheck = {
-		# 	command     = [ "CMD-SHELL", "curl -sf http://localhost:5000/internal-health || exit 1" ]
+		# 	command     = [ "CMD-SHELL", "curl -sf http://localhost:5000/health-internal || exit 1" ]
 		# 	retries     = 3
 		# 	timeout     = 3
 		# 	interval    = 5
 		# 	startPeriod = 5
-    	# }
+		# }
 		logConfiguration = {
 			logDriver = "awslogs"
 			options   = {
@@ -54,10 +63,9 @@ resource "aws_ecs_service" "main" {
 	force_new_deployment               = true
 
 	network_configuration {
-		security_groups  = [ aws_security_group.ecs_tasks.id ]
-  	subnets          = flatten(aws_subnet.public.*.id)
-		# TODO: set public ip to false after testing
-		assign_public_ip = true
+		security_groups  = [ aws_security_group.ecs_service.id ]
+		subnets          = flatten(aws_subnet.private.*.id)
+		assign_public_ip = false
 	}
 	
 	load_balancer {

@@ -23,6 +23,11 @@ var (
 type Database struct {
 }
 
+// TODO PRIO: migrate to pgx
+//            docs: https://pkg.go.dev/github.com/jackc/pgx/v5
+//            repo: https://github.com/jackc/pgx
+// It supports multi-statements: https://stackoverflow.com/questions/38998267/how-to-execute-a-sql-file
+
 func (d *Database) save_room_id_with_ip(room_id string, ip string) error {
 	db, err := sql.Open("postgres", psqlconn)
 	if err != nil {
@@ -162,5 +167,9 @@ func (d *Database) fetch_an_non_self_ip(self_ip string) (string, error) {
 }
 
 // TODO: add a database init sequence
+func (d *Database) initialize(self_ip string) error {
+	// TODO: try to execute a sql file here
+	return nil
+}
 
 var DB = Database{}

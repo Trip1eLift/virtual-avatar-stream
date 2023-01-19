@@ -28,6 +28,8 @@ func wsEndpoint(write http.ResponseWriter, request *http.Request) {
 
 	//log.Println("Client Successfully Connected...")
 
+	// TODO: close connection if self IP was not set
+
 	if err := HandleOwner(ws, request); err != nil {
 		log.Printf("Owner error")
 	}
@@ -44,6 +46,8 @@ func wsEndpoint(write http.ResponseWriter, request *http.Request) {
 }
 
 func Start() {
+	// TODO: init database if not exist here, stop here if database is not inited
+
 	if os.Getenv("SELF_IP") != "" {
 		// SELF_IP should only be set in local
 		IP.setIp(os.Getenv("SELF_IP"))
@@ -58,7 +62,7 @@ func Start() {
 		fmt.Fprintf(write, message)
 	})
 
-	http.HandleFunc("/proxy-health", func(write http.ResponseWriter, request *http.Request) {
+	http.HandleFunc("/health-proxy", func(write http.ResponseWriter, request *http.Request) {
 		self_ip, _ := IP.getIp()
 		if target_ip, err := DB.fetch_an_non_self_ip(self_ip); err != nil {
 			fmt.Fprintf(write, err.Error())
@@ -71,14 +75,14 @@ func Start() {
 
 	// This endpoint should not be hit by public
 	// TODO: check if ALB can block this
-	http.HandleFunc("/internal-health", func(write http.ResponseWriter, request *http.Request) {
+	http.HandleFunc("/health-internal", func(write http.ResponseWriter, request *http.Request) {
 		IP.setIp(request.Host)
 		message := fmt.Sprintf("internal health check.")
 		log.Print(message)
 		fmt.Fprintf(write, message)
 	})
 
-	http.HandleFunc("/database", func(write http.ResponseWriter, _ *http.Request) {
+	http.HandleFunc("/health-database", func(write http.ResponseWriter, _ *http.Request) {
 		if reply, err := DB.health_database(); err != nil {
 			fmt.Fprintf(write, err.Error())
 		} else {

@@ -24,5 +24,5 @@ CREATE SEQUENCE IF NOT EXISTS room_id_seq
   MAXVALUE 999999
   CACHE 1;
 
-INSERT INTO rooms(room_id, task_private_ip) VALUES('-1', 'test-ip-1');
-INSERT INTO rooms(room_id, task_private_ip) VALUES('-2', 'test-ip-2');
+-- INSERT INTO rooms(room_id, task_private_ip) VALUES('-1', 'test-ip-1');
+-- INSERT INTO rooms(room_id, task_private_ip) VALUES('-2', 'test-ip-2');

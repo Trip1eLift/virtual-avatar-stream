@@ -1,1 +1,13 @@
 GET http://localhost:5000/health
+
+###
+
+GET http://localhost:5000/health-database
+
+###
+
+GET http://localhost:5000/health-internal
+
+###
+
+GET http://localhost:5000/health-proxy

@@ -46,3 +46,5 @@ resource "null_resource" "docker_build_push" {
 		command = "docker push ${var.aws_account_id}.dkr.ecr.us-east-1.amazonaws.com/${var.name}:latest"
 	}
 }
+
+# TODO: fix error during destroy -> ECR Repository (virtual-avatar-stream) not empty, consider using force_delete: RepositoryNotEmptyException: The repository with name 'virtual-avatar-stream' in registry with id '201843717406' cannot be deleted because it still contains images
