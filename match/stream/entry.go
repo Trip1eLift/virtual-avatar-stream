@@ -47,6 +47,7 @@ func wsEndpoint(write http.ResponseWriter, request *http.Request) {
 
 func Start() {
 	// TODO: init database if not exist here, stop here if database is not inited
+	DB.initialize()
 
 	if os.Getenv("SELF_IP") != "" {
 		// SELF_IP should only be set in local

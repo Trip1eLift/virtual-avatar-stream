@@ -30,9 +30,6 @@ services:
       - ORIGIN=http://localhost:3000
       - AISLE_KEY=passcode
       - SELF_IP=match
-    # networks:
-    #   app_net:
-    #     ipv4_address: 172.16.238.11
     depends_on:
       - postgres_service
     tty: true
@@ -54,9 +51,6 @@ services:
       - ORIGIN=http://localhost:3000
       - AISLE_KEY=passcode
       - SELF_IP=match2
-    # networks:
-    #   app_net:
-    #     ipv4_address: 172.16.238.12
     depends_on:
       - postgres_service
     tty: true
@@ -71,15 +65,9 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - postgres:/var/lib/postgresql/data
-      - ./postgres/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
+      # let backend to populate the database
+      # - postgres:/var/lib/postgresql/data
+      # - ./match/postgres/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
 volumes:
   postgres:
     driver: local
-# networks:
-#   app_net:
-#     driver: bridge
-#     ipam:
-#       driver: default
-#       config:
-#         - subnet: "172.16.238.0/24"
