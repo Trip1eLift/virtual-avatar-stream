@@ -46,8 +46,10 @@ func wsEndpoint(write http.ResponseWriter, request *http.Request) {
 }
 
 func Start() {
-	// TODO: init database if not exist here, stop here if database is not inited
-	DB.initialize()
+	if err := DB.initializeRetry(); err != nil {
+		// Two backends might try to populate table at the same time, one of them will cause an error
+		log.Println("Unable to initialize database.")
+	}
 
 	if os.Getenv("SELF_IP") != "" {
 		// SELF_IP should only be set in local

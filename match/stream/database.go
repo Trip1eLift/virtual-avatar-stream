@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 )
 
@@ -18,15 +19,14 @@ var (
 	dbuser     = os.Getenv("DB_USER")
 	dbpassword = os.Getenv("DB_PASS")
 	dbname     = os.Getenv("DB_NAME")
-	psqlconn   = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", dbhost, dbport, dbuser, dbpassword, dbname)
+	// psqlconn   = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", dbhost, dbport, dbuser, dbpassword, dbname)
 	// urlExample := "postgres://username:password@localhost:5432/database_name"
 	psqlurl = fmt.Sprintf("postgres://%s:%s@%s:%s/%s", dbuser, dbpassword, dbhost, dbport, dbname)
 )
 
 type Database struct {
+	backoff float64
 }
-
-// TODO PRIO: migrate to pgxw
 
 func (d *Database) save_room_id_with_ip(room_id string, ip string) error {
 	conn, err := pgxw.Connect(psqlurl)
@@ -166,7 +166,17 @@ func (d *Database) fetch_an_non_self_ip(self_ip string) (string, error) {
 	return target_ip, nil
 }
 
-// TODO: add a database init retry for 30 minutes (once every 30s)
+func (d *Database) initializeRetry() error {
+	var err error
+	// Retry 60 times - local: 1 min - aws: 30 min
+	for i := 0; i < 60; i++ {
+		if err = d.initialize(); err == nil {
+			break
+		}
+		time.Sleep(time.Duration(d.backoff) * time.Second)
+	}
+	return err
+}
 
 func (d *Database) initialize() error {
 	conn, err := pgxw.Connect(psqlurl)
@@ -211,4 +221,7 @@ func (d *Database) initialize() error {
 	return nil
 }
 
-var DB = Database{}
+var DB_RETRY_BACKOFF, _ = strconv.ParseFloat(os.Getenv("DB_RETRY_BACKOFF"), 64)
+var DB = Database{
+	backoff: DB_RETRY_BACKOFF,
+}

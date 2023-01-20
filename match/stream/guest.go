@@ -100,7 +100,6 @@ func HandleGuest(conn *websocket.Conn, request *http.Request, port string) error
 	// Go routine
 	// - Read from guest and write to aisle
 	// - Read from aisle and write to guest
-	// TODO: study if there's a better way
 	go proxy_guest_aisle(conn, aisle_conn)
 	proxy_aisle_guest(aisle_conn, conn)
 

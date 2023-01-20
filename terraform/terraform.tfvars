@@ -22,10 +22,11 @@ common_tags = {
 aws_account_id = "201843717406"
 
 database_settings = {
-	DB_HOST = "postgres_service"
-	DB_USER = "postgres_user"
-	DB_NAME = "virtualavatar"
-	DB_PORT = 5432
+	DB_HOST          = "postgres_service"
+	DB_USER          = "postgres_user"
+	DB_NAME          = "virtualavatar"
+	DB_PORT          = 5432
+	DB_RETRY_BACKOFF = 30
 }
 
 frontend_origin = "http://localhost:3000"

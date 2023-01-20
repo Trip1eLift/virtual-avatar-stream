@@ -55,7 +55,6 @@ resource "aws_security_group" "ecs_service" {
 	tags = var.common_tags
 }
 
-# TODO: figure out where to attach this
 resource "aws_security_group" "aurora" {
   name        = "${var.name}-${var.environment}-aurora-sg"
   description = "For aurora"

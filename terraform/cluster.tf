@@ -16,14 +16,15 @@ resource "aws_ecs_task_definition" "main" {
 		image       = "${aws_ecr_repository.main.repository_url}:latest"
 		essential   = true
 		environment = [
-			{"name": "environment", "value": "${var.environment}"},
-			{"name": "DB_HOST",     "value": "${aws_rds_cluster.main.endpoint}"},
-			{"name": "DB_USER",     "value": "${aws_rds_cluster.main.master_username}"},
-			{"name": "DB_NAME",     "value": "${aws_rds_cluster.main.database_name}"},
-			{"name": "DB_PORT",     "value": "${tostring(aws_rds_cluster.main.port)}"},
-			{"name": "DB_PASS",     "value": "postgres_password"},       # TODO: use AWS secret manager later
-			{"name": "ORIGIN",      "value": "${var.frontend_origin}"},
-			{"name": "AISLE_KEY",   "value": "passcode"},                # TODO: use AWS secret manager later
+			{"name": "environment",      "value": "${var.environment}"},
+			{"name": "DB_HOST",          "value": "${aws_rds_cluster.main.endpoint}"},
+			{"name": "DB_USER",          "value": "${aws_rds_cluster.main.master_username}"},
+			{"name": "DB_NAME",          "value": "${aws_rds_cluster.main.database_name}"},
+			{"name": "DB_PORT",          "value": "${tostring(aws_rds_cluster.main.port)}"},
+			{"name": "DB_PASS",          "value": "postgres_password"},       # TODO: use AWS secret manager later or uuid from local
+			{"name": "DB_RETRY_BACKOFF", "value": "${var.database_settings.DB_RETRY_BACKOFF}"},
+			{"name": "ORIGIN",           "value": "${var.frontend_origin}"},
+			{"name": "AISLE_KEY",        "value": "passcode"},                # TODO: use AWS secret manager later or uuid from local
 		]
 		portMappings = [{
 			protocol      = "tcp"

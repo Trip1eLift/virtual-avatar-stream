@@ -5,7 +5,7 @@ resource "aws_rds_cluster" "main" {
   availability_zones      = var.availability_zones
   database_name           = var.database_settings.DB_NAME
   master_username         = var.database_settings.DB_USER
-  master_password         = "postgres_password" # TODO: use AWS secret manager later
+  master_password         = "postgres_password" # TODO: use AWS secret manager later or uuid from local
   vpc_security_group_ids  = [ aws_security_group.aurora.id ]
   db_subnet_group_name    = aws_db_subnet_group.main.name
   skip_final_snapshot     = true
@@ -34,5 +34,4 @@ resource "aws_rds_cluster_instance" "main" {
   tags                 = var.common_tags
 }
 
-
-# TODO: run create_tables.sql in /internal-health for one time
+// TODO PRIO: stands up aurora and connect backend to db
