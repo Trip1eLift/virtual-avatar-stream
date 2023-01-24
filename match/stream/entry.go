@@ -28,7 +28,7 @@ func wsEndpoint(write http.ResponseWriter, request *http.Request) {
 
 	//log.Println("Client Successfully Connected...")
 
-	// TODO: close connection if self IP was not set
+	// TODO: close connection if self IP was not set; Self ip is always set, skip this for now
 
 	if err := HandleOwner(ws, request); err != nil {
 		log.Printf("Owner error")
@@ -58,22 +58,34 @@ func Start() {
 
 	http.HandleFunc("/", wsEndpoint)
 
-	http.HandleFunc("/health", func(write http.ResponseWriter, request *http.Request) {
+	http.HandleFunc("/health", func(write http.ResponseWriter, _ *http.Request) {
 		self_ip, _ := IP.getIp()
 		message := fmt.Sprintf("Healthy: private self IP: %s.\n", self_ip)
 		log.Print(message)
 		fmt.Fprintf(write, message)
 	})
 
-	http.HandleFunc("/health-proxy", func(write http.ResponseWriter, request *http.Request) {
+	http.HandleFunc("/health-proxy", func(write http.ResponseWriter, _ *http.Request) {
 		self_ip, _ := IP.getIp()
-		if target_ip, err := DB.fetch_an_non_self_ip(self_ip); err != nil {
-			fmt.Fprintf(write, err.Error())
-		} else {
-			message := fmt.Sprintf("Proxy Healthy: target proxy IP: %s.\n", target_ip)
-			log.Print(message)
-			fmt.Fprintf(write, message)
+		target_ip, err := DB.fetch_an_non_self_ip(self_ip)
+		if err != nil {
+			fmt.Fprintf(write, fmt.Sprintf("Database fetch error\n%s\n", err.Error()))
+			return
 		}
+
+		res, err := HTTPGet(fmt.Sprintf("http://%s:%s/health", target_ip, port))
+		if err != nil {
+			fmt.Fprintf(write, fmt.Sprintf("Proxy healthcheck error\n%s\n", err.Error()))
+			return
+		}
+
+		// TODO PRIO: health-proxy not working on aws:
+		//						Proxy healthcheck error
+		// 						Execute get reqeust error: Get "http://10.0.8.198:5000:5000/health": dial tcp: lookup 10.0.8.198:5000: no such host
+
+		message := fmt.Sprintf("Proxy Healthy: self IP: %s target proxy IP: %s.\nProxy health message:\n\t%s\n", self_ip, target_ip, res)
+		log.Print(message)
+		fmt.Fprintf(write, message)
 	})
 
 	// This endpoint should not be hit by public

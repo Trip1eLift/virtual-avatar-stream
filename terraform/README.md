@@ -17,7 +17,7 @@ terraform apply -destroy
 
 docker build, tag, and push is now part of terraform.
 
-## Stack testing
+## Stack basic testing
 
 ```shell
 curl http://virtualavatar-stream.trip1elift.com:80/health -L
@@ -33,4 +33,14 @@ curl http://virtualavatar-stream.trip1elift.com/health -L
 
 ```shell
 curl https://virtualavatar-stream.trip1elift.com/health
+```
+
+## Stack database testing
+
+```shell
+curl https://virtualavatar-stream.trip1elift.com:443/health-database
+```
+
+```shell
+curl https://virtualavatar-stream.trip1elift.com:443/health-proxy
 ```

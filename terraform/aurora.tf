@@ -33,5 +33,3 @@ resource "aws_rds_cluster_instance" "main" {
   db_subnet_group_name = aws_db_subnet_group.main.name
   tags                 = var.common_tags
 }
-
-// TODO PRIO: stands up aurora and connect backend to db

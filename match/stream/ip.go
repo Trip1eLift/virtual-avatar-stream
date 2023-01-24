@@ -16,6 +16,7 @@ func (i *Ip) setIp(ip string) {
 	i.mu.RLock()
 	if i.ip != "" {
 		i.mu.RUnlock()
+		// Do nothing if self_ip is set. Neither set self_ip or populate database schema
 		return
 	}
 	i.mu.RUnlock()
