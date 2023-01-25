@@ -4,6 +4,9 @@ import './App.css';
 
 const url1 = "ws://localhost:5000";
 const url2 = "ws://localhost:5001";
+
+// TODO: add remote testing configurations
+
 let socket;
 
 function ownerConn(url, setRoomId) {
