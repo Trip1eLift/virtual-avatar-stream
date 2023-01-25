@@ -1,0 +1,13 @@
+GET https://virtualavatar-stream.trip1elift.com/health
+
+###
+
+GET https://virtualavatar-stream.trip1elift.com/health-database
+
+###
+
+GET https://virtualavatar-stream.trip1elift.com/health-internal
+
+###
+
+GET https://virtualavatar-stream.trip1elift.com/health-proxy

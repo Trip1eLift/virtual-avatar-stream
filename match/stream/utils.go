@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 func HeaderVerify(request *http.Request) bool {
@@ -48,7 +49,10 @@ func HTTPGet(url string) (string, error) {
 		return "", err
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	client := http.Client{
+		Timeout: 2 * time.Second,
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		err = errors.New("Execute get reqeust error: " + err.Error())
 		log.Println(err.Error())

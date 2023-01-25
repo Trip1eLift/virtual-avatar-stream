@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -156,7 +157,7 @@ func (d *Database) fetch_an_non_self_ip(self_ip string) (string, error) {
 	defer conn.Close()
 
 	var target_ip string
-	err = conn.QueryRow("SELECT task_private_ip FROM rooms WHERE task_private_ip!=$1 LIMIT 1;", self_ip).Scan(&target_ip)
+	err = conn.QueryRow("SELECT DISTINCT task_private_ip FROM rooms WHERE task_private_ip!=$1 LIMIT 1;", self_ip).Scan(&target_ip)
 	if err != nil {
 		err = errors.New("Postgres query error: " + err.Error())
 		log.Println(err.Error())
@@ -215,6 +216,51 @@ func (d *Database) initialize() error {
 	_, err = conn.Exec(sql)
 	if err != nil {
 		err = errors.New("Postgres schema population error: " + err.Error())
+		log.Println(err.Error())
+		return err
+	}
+	return nil
+}
+
+func (d *Database) cleanup(self_ip string) error {
+	conn, err := pgxw.Connect(psqlurl)
+	if err != nil {
+		err = errors.New("Postgres connection error: " + err.Error())
+		log.Println(err.Error())
+		return err
+	}
+	defer conn.Close()
+
+	rows, err := conn.Query("SELECT DISTINCT task_private_ip FROM rooms WHERE task_private_ip!=$1;", self_ip)
+	if err != nil {
+		err = errors.New("Postgres query error: " + err.Error())
+		log.Println(err.Error())
+		return err
+	}
+	defer rows.Close()
+
+	remove_ips := make([]string, 0)
+	for rows.Next() {
+		var target_ip string
+		err = rows.Scan(&target_ip)
+		if err != nil {
+			err = errors.New("Postgres row scan error: " + err.Error())
+			log.Println(err.Error())
+			return err
+		}
+
+		// Check if IP is healthy; if not, add to remove_ips list
+		_, err := HTTPGet(fmt.Sprintf("http://%s/health", target_ip))
+		if err != nil {
+			remove_ips = append(remove_ips, target_ip)
+		}
+	}
+
+	// Remove all non-healthy IPs
+	remove_ips_str := "{" + strings.Join(remove_ips, ",") + "}"
+	_, err = conn.Exec("DELETE FROM rooms WHERE task_private_ip=ANY($1);", remove_ips_str)
+	if err != nil {
+		err = errors.New("Postgres delete error: " + err.Error())
 		log.Println(err.Error())
 		return err
 	}

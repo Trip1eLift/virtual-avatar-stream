@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func HandleGuest(conn *websocket.Conn, request *http.Request, port string) error {
+func HandleGuest(conn *websocket.Conn, request *http.Request) error {
 	if request.Header["Sec-Websocket-Protocol"][0] != "guest" {
 		return nil
 	}
@@ -63,7 +63,7 @@ func HandleGuest(conn *websocket.Conn, request *http.Request, port string) error
 	log.Printf("Owner instance ip: %s\n", owner_ip)
 
 	// 3.2 Establish proxy of guest-aisle and feed AISLE_KEY and room_id
-	aisle_url := url.URL{Scheme: "ws", Host: fmt.Sprintf("%s:%s", owner_ip, port), Path: "/"}
+	aisle_url := url.URL{Scheme: "ws", Host: fmt.Sprintf("%s", owner_ip), Path: "/"}
 	aisle_header := http.Header{
 		"Sec-Websocket-Protocol": {"aisle"},
 	}

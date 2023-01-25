@@ -13,9 +13,9 @@ cleanse:
 deploy-init:
 	cd terraform; terraform init
 
-deploy: deploy-init
+deploy:
 	cd terraform; terraform apply
-# after deployment, manually stop tasks and the new tasks will use the new image
+# After deployment, manually stop old tasks. The new tasks will be deployed already.
 
 destroy:
 	cd terraform; terraform apply -destroy

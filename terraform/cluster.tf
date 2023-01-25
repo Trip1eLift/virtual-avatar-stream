@@ -17,6 +17,7 @@ resource "aws_ecs_task_definition" "main" {
 		essential   = true
 		environment = [
 			{"name": "environment",      "value": "${var.environment}"},
+			{"name": "PORT",             "value": "${tostring(var.container_port)}"},
 			{"name": "DB_HOST",          "value": "${aws_rds_cluster.main.endpoint}"},
 			{"name": "DB_USER",          "value": "${aws_rds_cluster.main.master_username}"},
 			{"name": "DB_NAME",          "value": "${aws_rds_cluster.main.database_name}"},
@@ -25,6 +26,7 @@ resource "aws_ecs_task_definition" "main" {
 			{"name": "DB_RETRY_BACKOFF", "value": "${var.database_settings.DB_RETRY_BACKOFF}"},
 			{"name": "ORIGIN",           "value": "${var.frontend_origin}"},
 			{"name": "AISLE_KEY",        "value": "passcode"},                # TODO: use AWS secret manager later or uuid from local
+			{"name": "TIME_STAMP",       "value": "${timestamp()}"},          # Force update on image version which auto trigger deployment on new task
 		]
 		portMappings = [{
 			protocol      = "tcp"
@@ -33,7 +35,7 @@ resource "aws_ecs_task_definition" "main" {
 		}]
 		# Healthcheck is written in Dockerfile.
 		# healthCheck = {
-		# 	command     = [ "CMD-SHELL", "curl -sf http://localhost:5000/health-internal || exit 1" ]
+		# 	command     = [ "CMD-SHELL", "curl -sf http://localhost:${var.container_port}/health-internal || exit 1" ]
 		# 	retries     = 3
 		# 	timeout     = 3
 		# 	interval    = 5

@@ -11,9 +11,10 @@ services:
       - /app/node_modules
     hostname: client
     depends_on:
-      - match
+      - match1
+      - match2
     command: npm run dev
-  match:
+  match1:
     container_name: match1
     build: ./match
     ports:
@@ -22,6 +23,7 @@ services:
     volumes:
       - ./match:/app/
     environment:
+      - PORT=5000
       - DB_USER=postgres_user
       - DB_HOST=postgres_service
       - DB_PASS=postgres_password
@@ -30,7 +32,7 @@ services:
       - DB_RETRY_BACKOFF=1
       - ORIGIN=http://localhost:3000
       - AISLE_KEY=passcode
-      - SELF_IP=match
+      - SELF_IP=match1:5000
     depends_on:
       - postgres_service
     tty: true
@@ -44,6 +46,7 @@ services:
     volumes:
       - ./match:/app/
     environment:
+      - PORT=5000
       - DB_USER=postgres_user
       - DB_HOST=postgres_service
       - DB_PASS=postgres_password
@@ -52,7 +55,7 @@ services:
       - DB_RETRY_BACKOFF=1
       - ORIGIN=http://localhost:3000
       - AISLE_KEY=passcode
-      - SELF_IP=match2
+      - SELF_IP=match2:5000
     depends_on:
       - postgres_service
     tty: true

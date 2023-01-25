@@ -15,8 +15,12 @@ type Ip struct {
 func (i *Ip) setIp(ip string) {
 	i.mu.RLock()
 	if i.ip != "" {
+		// Neither set self_ip or populate database schema if self_ip was set
+		// Cleanup outdated IPs however
+		self_ip := i.ip
 		i.mu.RUnlock()
-		// Do nothing if self_ip is set. Neither set self_ip or populate database schema
+
+		go DB.cleanup(self_ip) // 2 queries every 30s per tasks; 2 tasks -> 86400 query per month = 0.035$ per month
 		return
 	}
 	i.mu.RUnlock()
@@ -25,9 +29,8 @@ func (i *Ip) setIp(ip string) {
 	log.Printf("Set self IP to be: %s", i.ip)
 	i.mu.Unlock()
 
-	// TODO: this can be turn off after testing
 	// reserve temporary room (24hr) for task itself using negative room_id, this is for health-proxy
-	go func(ip string) {
+	go func(self_ip string) {
 		// Retry 6 times - local: 6 sec - aws: 3 min
 		for i := 0; i < 6; i++ {
 			room_id, err := DB.fetch_unique_room_id()
@@ -35,7 +38,13 @@ func (i *Ip) setIp(ip string) {
 				time.Sleep(time.Duration(DB.backoff) * time.Second)
 				continue
 			}
-			err = DB.save_room_id_with_ip("-"+room_id, ip)
+			err = DB.save_room_id_with_ip("-"+room_id, self_ip)
+			if err != nil {
+				continue
+			}
+
+			// Cleanup outdated IPs on deployment
+			err = DB.cleanup(self_ip)
 			if err == nil {
 				return
 			}

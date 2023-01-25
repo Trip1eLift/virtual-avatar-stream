@@ -9,8 +9,9 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-const ip = "0.0.0.0"
-const port = "5000"
+const BROADCAST_IP = "0.0.0.0"
+
+var BROADCAST_PORT = os.Getenv("PORT")
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -33,7 +34,7 @@ func wsEndpoint(write http.ResponseWriter, request *http.Request) {
 	if err := HandleOwner(ws, request); err != nil {
 		log.Printf("Owner error")
 	}
-	if err := HandleGuest(ws, request, port); err != nil {
+	if err := HandleGuest(ws, request); err != nil {
 		log.Printf("Guest error")
 	}
 	if err := HandleAisle(ws, request); err != nil {
@@ -73,15 +74,11 @@ func Start() {
 			return
 		}
 
-		res, err := HTTPGet(fmt.Sprintf("http://%s:%s/health", target_ip, port))
+		res, err := HTTPGet(fmt.Sprintf("http://%s/health", target_ip))
 		if err != nil {
 			fmt.Fprintf(write, fmt.Sprintf("Proxy healthcheck error\n%s\n", err.Error()))
 			return
 		}
-
-		// TODO PRIO: health-proxy not working on aws:
-		//						Proxy healthcheck error
-		// 						Execute get reqeust error: Get "http://10.0.8.198:5000:5000/health": dial tcp: lookup 10.0.8.198:5000: no such host
 
 		message := fmt.Sprintf("Proxy Healthy: self IP: %s target proxy IP: %s.\nProxy health message:\n\t%s\n", self_ip, target_ip, res)
 		log.Print(message)
@@ -105,6 +102,6 @@ func Start() {
 		}
 	})
 
-	log.Printf("Listening on %s:%s\n", ip, port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%s", ip, port), nil))
+	log.Printf("Listening on %s:%s\n", BROADCAST_IP, BROADCAST_PORT)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%s", BROADCAST_IP, BROADCAST_PORT), nil))
 }
