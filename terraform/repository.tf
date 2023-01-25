@@ -2,6 +2,11 @@ resource "aws_ecr_repository" "main" {
 	name                 = "${var.name}"
 	image_tag_mutability = "MUTABLE"
 	tags                 = var.common_tags
+
+	provisioner "local-exec"{
+		when    = destroy
+		command = "aws ecr batch-delete-image --region us-east-1 --repository-name ${self.name} --image-ids \"$(aws ecr list-images --region us-east-1 --repository-name ${self.name} --query 'imageIds[*]' --output json)\""
+	}
 }
 
 resource "aws_ecr_lifecycle_policy" "main" {
@@ -46,5 +51,3 @@ resource "null_resource" "docker_build_push" {
 		command = "docker push ${var.aws_account_id}.dkr.ecr.us-east-1.amazonaws.com/${var.name}:latest"
 	}
 }
-
-# TODO: fix error during destroy -> ECR Repository (virtual-avatar-stream) not empty, consider using force_delete: RepositoryNotEmptyException: The repository with name 'virtual-avatar-stream' in registry with id '201843717406' cannot be deleted because it still contains images
