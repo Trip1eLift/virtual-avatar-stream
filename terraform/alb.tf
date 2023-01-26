@@ -60,3 +60,24 @@ resource "aws_alb_listener" "https" {
     type             = "forward"
   }
 }
+
+resource "aws_alb_listener_rule" "health_internal" {
+  listener_arn = aws_alb_listener.https.arn
+  priority     = 1
+
+  action {
+    type             = "fixed-response"
+
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "I'm a teapot.\n"
+      status_code  = "418"
+    }
+  }
+
+  condition {
+    path_pattern {
+      values = ["/health-internal"]
+    }
+  }
+}

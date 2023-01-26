@@ -26,7 +26,7 @@ resource "aws_ecs_task_definition" "main" {
 			{"name": "DB_RETRY_BACKOFF", "value": "${var.database_settings.DB_RETRY_BACKOFF}"},
 			{"name": "ORIGIN",           "value": "${var.frontend_origin}"},
 			{"name": "AISLE_KEY",        "value": "passcode"},                # TODO: use AWS secret manager later or uuid from local
-			{"name": "TIME_STAMP",       "value": "${timestamp()}"},          # Force update on image version which auto trigger deployment on new task
+			{"name": "TIME_STAMP",       "value": "${timestamp()}"},          # Forces update on image version which auto trigger deployment on new task
 		]
 		portMappings = [{
 			protocol      = "tcp"

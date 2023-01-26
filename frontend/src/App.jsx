@@ -7,8 +7,6 @@ const url2 = "ws://localhost:5001";
 
 const remoteUrl = "wss://virtualavatar-stream.trip1elift.com/";
 
-// TODO PRIO: add remote testing configurations
-
 let socket;
 
 function ownerConn(url, setRoomId) {

@@ -29,16 +29,26 @@ func wsEndpoint(write http.ResponseWriter, request *http.Request) {
 
 	//log.Println("Client Successfully Connected...")
 
-	// TODO: close connection if self IP was not set; Self ip is always set, skip this for now
+	if _, err := IP.getIp(); err != nil {
+		log.Printf("Owner error")
+		ws.WriteMessage(websocket.CloseMessage,
+			websocket.FormatCloseMessage(websocket.CloseGoingAway, "Owner error: "+err.Error()))
+	}
 
 	if err := HandleOwner(ws, request); err != nil {
 		log.Printf("Owner error")
+		ws.WriteMessage(websocket.CloseMessage,
+			websocket.FormatCloseMessage(websocket.CloseGoingAway, "Owner error: "+err.Error()))
 	}
 	if err := HandleGuest(ws, request); err != nil {
 		log.Printf("Guest error")
+		ws.WriteMessage(websocket.CloseMessage,
+			websocket.FormatCloseMessage(websocket.CloseGoingAway, "Guest error: "+err.Error()))
 	}
 	if err := HandleAisle(ws, request); err != nil {
 		log.Printf("Aisle error")
+		ws.WriteMessage(websocket.CloseMessage,
+			websocket.FormatCloseMessage(websocket.CloseGoingAway, "Aisle error: "+err.Error()))
 	}
 
 	if err := ws.Close(); err != nil {
@@ -62,7 +72,7 @@ func Start() {
 	http.HandleFunc("/health", func(write http.ResponseWriter, _ *http.Request) {
 		self_ip, _ := IP.getIp()
 		message := fmt.Sprintf("Healthy: private self IP: %s.\n", self_ip)
-		//log.Print(message)
+		//log.Print(message) // This endpoint is called too often
 		fmt.Fprintf(write, message)
 	})
 
@@ -85,12 +95,11 @@ func Start() {
 		fmt.Fprintf(write, message)
 	})
 
-	// This endpoint should not be hit by public
-	// TODO: check if ALB can block this
+	// ALB blocks this endpoint from public with 418
 	http.HandleFunc("/health-internal", func(write http.ResponseWriter, request *http.Request) {
 		IP.setIp(request.Host)
 		message := fmt.Sprintf("internal health check.")
-		//log.Print(message)
+		//log.Print(message) // This endpoint is called too often
 		fmt.Fprintf(write, message)
 	})
 
