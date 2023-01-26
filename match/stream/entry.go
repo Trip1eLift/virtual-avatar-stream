@@ -9,6 +9,8 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// TODO: Implement logger info, debug, error so it doesn't spam message on the server
+
 const BROADCAST_IP = "0.0.0.0"
 
 var BROADCAST_PORT = os.Getenv("PORT")
