@@ -169,7 +169,7 @@ func (d *Database) fetch_an_non_self_ip(self_ip string) (string, error) {
 
 func (d *Database) initializeRetry() error {
 	var err error
-	// Retry 60 times - local: 1 min - aws: 30 min
+	// Retry 60 times - local: 1 min - aws: 60 min
 	for i := 0; i < 60; i++ {
 		if err = d.initialize(); err == nil {
 			break

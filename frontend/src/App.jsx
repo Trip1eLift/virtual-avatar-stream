@@ -5,7 +5,9 @@ import './App.css';
 const url1 = "ws://localhost:5000";
 const url2 = "ws://localhost:5001";
 
-// TODO: add remote testing configurations
+const remoteUrl = "wss://virtualavatar-stream.trip1elift.com/";
+
+// TODO PRIO: add remote testing configurations
 
 let socket;
 
@@ -107,14 +109,16 @@ function App() {
 
   return (
     <div className="App">
-      <button onClick={(e)=>ownerConn(url1, setOwnerRoomId)} >Owner Sever 1</button>
-      <button onClick={(e)=>ownerConn(url2, setOwnerRoomId)} >Owner Sever 2</button>
+      <button onClick={(e)=>ownerConn(url1, setOwnerRoomId)} >Owner Local Sever 1</button>
+      <button onClick={(e)=>ownerConn(url2, setOwnerRoomId)} >Owner Local Sever 2</button>
+      <button onClick={(e)=>ownerConn(remoteUrl, setOwnerRoomId)} >Owner Remote Sever</button>
       <br/>
       {ownerRoomId && <>Owner Room ID: {ownerRoomId}</>}
       <br/>
       <input type="text" onChange={(e)=>setGuestRoomId(e.target.value)} />
-      <button onClick={(e)=>guestConn(url1, guestRoomId)} >Guest Server 1</button>
-      <button onClick={(e)=>guestConn(url2, guestRoomId)} >Guest Server 2</button>
+      <button onClick={(e)=>guestConn(url1, guestRoomId)} >Guest Local Server 1</button>
+      <button onClick={(e)=>guestConn(url2, guestRoomId)} >Guest Local Server 2</button>
+      <button onClick={(e)=>guestConn(remoteUrl, guestRoomId)} >Guest Remote Server</button>
       <br/>
       <br/>
       <button onClick={(e)=>sendUuid()}>Send ID</button>

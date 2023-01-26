@@ -24,17 +24,22 @@ variable "vpc_cidr" {
 
 variable "public_subnet_cidrs" {
 	type = list
-	description = "public cidr block of subnet (list length shoud be the same as availability_zones)"
+	description = "public cidr block of subnet; ALB requires at least 2 subnets (list length shoud be the same as public_availability_zones)"
 }
 
 variable "private_subnet_cidrs" {
 	type = list
-	description = "private cidr block of subnet (list length shoud be the same as availability_zones)"
+	description = "private cidr block of subnet; RDS requires at least 3 subnets (list length shoud be the same as private_availability_zones)"
 }
 
-variable "availability_zones" {
+variable "public_availability_zones" {
 	type = list
-	description = "list of availability zones for subnet (list length shoud be the same as subnet_cidrs)"
+	description = "list of availability zones for public subnets (list length shoud be the same as public_subnet_cidrs)"
+}
+
+variable "private_availability_zones" {
+	type = list
+	description = "list of availability zones for private subnets (list length shoud be the same as private_subnet_cidrs)"
 }
 
 variable "container_port" {

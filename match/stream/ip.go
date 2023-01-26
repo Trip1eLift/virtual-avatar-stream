@@ -20,7 +20,7 @@ func (i *Ip) setIp(ip string) {
 		self_ip := i.ip
 		i.mu.RUnlock()
 
-		go DB.cleanup(self_ip) // 2 queries every 30s per tasks; 2 tasks -> 86400 query per month = 0.035$ per month
+		DB.cleanup(self_ip) // 2 queries every 30s per tasks; 2 tasks -> 86400 query per month = 0.035$ per month
 		return
 	}
 	i.mu.RUnlock()

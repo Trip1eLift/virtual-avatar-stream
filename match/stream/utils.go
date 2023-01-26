@@ -6,15 +6,16 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 )
 
 func HeaderVerify(request *http.Request) bool {
-	if request.Header["Connection"] == nil || request.Header["Connection"][0] != "Upgrade" {
-		log.Printf("Connection is not [Upgrade] but %s.\n", request.Header["Connection"])
+	if request.Header["Connection"] == nil || strings.ToLower(request.Header["Connection"][0]) != "upgrade" {
+		log.Printf("Connection is not [upgrade] but %s.\n", request.Header["Connection"])
 		return false
 	}
-	if request.Header["Upgrade"] == nil || request.Header["Upgrade"][0] != "websocket" {
+	if request.Header["Upgrade"] == nil || strings.ToLower(request.Header["Upgrade"][0]) != "websocket" {
 		log.Printf("Upgrade is not [websocket] but %s.\n", request.Header["Upgrade"])
 		return false
 	}

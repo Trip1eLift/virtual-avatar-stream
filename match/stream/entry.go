@@ -62,7 +62,7 @@ func Start() {
 	http.HandleFunc("/health", func(write http.ResponseWriter, _ *http.Request) {
 		self_ip, _ := IP.getIp()
 		message := fmt.Sprintf("Healthy: private self IP: %s.\n", self_ip)
-		log.Print(message)
+		//log.Print(message)
 		fmt.Fprintf(write, message)
 	})
 
@@ -90,7 +90,7 @@ func Start() {
 	http.HandleFunc("/health-internal", func(write http.ResponseWriter, request *http.Request) {
 		IP.setIp(request.Host)
 		message := fmt.Sprintf("internal health check.")
-		log.Print(message)
+		//log.Print(message)
 		fmt.Fprintf(write, message)
 	})
 

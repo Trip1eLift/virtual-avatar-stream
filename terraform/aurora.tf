@@ -2,7 +2,7 @@ resource "aws_rds_cluster" "main" {
   cluster_identifier      = "${var.name}-${var.environment}-aurora"
   engine                  = "aurora-postgresql"
   engine_mode             = "provisioned"
-  availability_zones      = var.availability_zones
+  availability_zones      = var.private_availability_zones
   database_name           = var.database_settings.DB_NAME
   master_username         = var.database_settings.DB_USER
   master_password         = "postgres_password" # TODO: use AWS secret manager later or uuid from local
@@ -20,7 +20,7 @@ resource "aws_rds_cluster" "main" {
 
 resource "aws_db_subnet_group" "main" {
   name       = "${var.name}-${var.environment}-subnet-group"
-  subnet_ids = flatten(aws_subnet.public.*.id)
+  subnet_ids = flatten(aws_subnet.private.*.id)
   tags       = var.common_tags
 }
 
@@ -29,7 +29,7 @@ resource "aws_rds_cluster_instance" "main" {
   instance_class       = "db.serverless"
   engine               = aws_rds_cluster.main.engine
   engine_version       = aws_rds_cluster.main.engine_version
-  # publicly_accessible  = true
+  publicly_accessible  = false
   db_subnet_group_name = aws_db_subnet_group.main.name
   tags                 = var.common_tags
 }
