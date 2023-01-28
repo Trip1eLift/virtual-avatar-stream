@@ -1,4 +1,9 @@
-const url = "ws://localhost:5000";
+import { v4 as uuidv4 } from 'uuid';
+
+// WebRTC docs:   https://levelup.gitconnected.com/establishing-the-webrtc-connection-videochat-with-javascript-step-3-48d4ae0e9ea4
+// firebase docs: https://github.com/fireship-io/webrtc-firebase-demo/blob/main/main.js
+// WebRTC org:    https://webrtc.org/getting-started/peer-connections
+//                https://stackoverflow.com/questions/22470291/rtcdatachannels-readystate-is-not-open
 
 const ICE_config = {
   iceServers: [
@@ -17,6 +22,12 @@ const ICE_config = {
     }
   ],
   iceCandidatePoolSize: 10,
+};
+
+const Peer_options = {
+  optional: [{
+    RtpDataChannels: true
+  }]
 };
 
 /**
@@ -39,21 +50,44 @@ const MESSAGE_TYPE = {
   newIceCandidate:      'new-ice-candidate',
 };
 
-// WebRTC docs:   https://levelup.gitconnected.com/establishing-the-webrtc-connection-videochat-with-javascript-step-3-48d4ae0e9ea4
-// firebase docs: https://github.com/fireship-io/webrtc-firebase-demo/blob/main/main.js
-// WebRTC org:    https://webrtc.org/getting-started/peer-connections
-
 class WebSocketPeering {
-  constructor(peerConnection) {
-    this.url = url;
-    this.pc = peerConnection;
+  constructor() {
+    
+    const peer = new RTCPeerConnection(ICE_config, Peer_options);
+
+    peer.ondatachannel = (event) => {
+      event.channel.onmessage = (event) => {
+        // PeerConnection DataChannel Listener
+        const payload = JSON.parse(event.data);
+
+        if (payload.message_type === MESSAGE_TYPE.push) {
+          console.log(`[peer] recieved: ${payload.message}`);
+        }
+      };
+    };
+
+    const datachannel = peer.createDataChannel("data");
+    
+    datachannel.onopen = () => {
+      console.log("[peer] Connection established; Closing websocket");
+      this.socket.close(1000, "websocket is no longer needed.");
+    };
+    
+    datachannel.onclose = () => {
+      console.log("[peer]");
+    };
+
+    this.socket = undefined;
+    this.peer = peer;
+    this.dc = datachannel;
   }
 
-  ownerConn(setRoomId) {
-    const socket = new WebSocket(this.url, ["owner"]);
+  ownerConn(url, setRoomId) {
+    const socket = new WebSocket(url, ["owner"]);
+    const peer = this.peer;
   
     socket.onopen = async function(e) {
-      console.log("[open] Connection established");
+      console.log("[socket open] Connection established");
       
       const room_id = await Demand(socket, "Room-Id");
       console.log(`Room-Id: ${room_id}`);
@@ -62,120 +96,81 @@ class WebSocketPeering {
     
     socket.onmessage = async function(event) {
       const payload = JSON.parse(event.data);
-      const peerConnection = this.pc;
 
       if (payload.message_type === MESSAGE_TYPE.push) {
-        console.log(`[client] recieved: ${payload.message}`);
+        console.log(`[owner socket] recieved: ${payload.message}`);
       }
 
       // 2. Owner reacts to start-peer-connection
       if (payload.message_type === MESSAGE_TYPE.startPeerConnection) {
-        const offer = await peerConnection.createOffer();
-        await peerConnection.setLocalDescription(offer);
+        const offer = await peer.createOffer();
+        await peer.setLocalDescription(offer);
 
         socket.send(JSON.stringify({message_type: MESSAGE_TYPE.offerPeerConnection, message: offer}));
-      }
-
-      // 3. Guest recieves offer data
-      if (payload.message_type === MESSAGE_TYPE.offerPeerConnection) {
-        peerConnection.setRemoteDescription(new RTCSessionDescription(payload.message));
-        const answer = await peerConnection.createAnswer();
-        await peerConnection.setLocalDescription(answer);
-
-        socket.send(JSON.stringify({message_type: MESSAGE_TYPE.answerPeerConnection, message: answer}));
       }
 
       // 4. Owner recieves answer data
       if (payload.message_type === MESSAGE_TYPE.answerPeerConnection) {
         const remoteDesc = new RTCSessionDescription(payload.message);
-        await peerConnection.setRemoteDescription(remoteDesc);
+        await peer.setRemoteDescription(remoteDesc);
+      }
+    }
 
-        // 5. Owner retrieves a local ICE candidate
-        peerConnection.addEventListener('icecandidate', event => {
-          if (event.candidate) {
-            socket.send(JSON.stringify({message_type: MESSAGE_TYPE.newIceCandidate, message: event.candidate}));
-          }
-        });
+    // 5. Owner retrieves a local ICE candidate TODO: how to trigger this?
+    peer.addEventListener('icecandidate', event => {
+      if (event.candidate) {
+        socket.send(JSON.stringify({message_type: MESSAGE_TYPE.newIceCandidate, message: event.candidate}));
+      }
+    });
+    
+    attachSocketSharedHandler(socket);
+    this.socket = socket;
+  }
 
-        // 7. Owner detects peer connection estiblishments
-        peerConnection.addEventListener('connectionstatechange', event => {
-          if (peerConnection.connectionState === 'connected') {
-            console.log("Owner is connected to peer connection.");
+  guestConn(url, room_id) {
+    const socket = new WebSocket(url, ["guest"]);
+    const peer = this.peer;
+  
+    socket.onopen = async function(e) {
+      console.log("[socket open] Connection established");
+      
+      await Supply(socket, "Room-Id", room_id);
 
-            // TODO: set stream here
-          }
-        });
+      // 1. Guest triggers start-peer-connection
+      socket.send(JSON.stringify({message_type: MESSAGE_TYPE.startPeerConnection}));
+    };
+  
+    socket.onmessage = async function(event) {
+      const payload = JSON.parse(event.data);
+
+      if (payload.message_type === MESSAGE_TYPE.push) {
+        console.log(`[guest socket] recieved: ${payload.message}`);
+      }
+
+      // 3. Guest recieves offer data
+      if (payload.message_type === MESSAGE_TYPE.offerPeerConnection) {
+        peer.setRemoteDescription(new RTCSessionDescription(payload.message));
+        const answer = await peer.createAnswer();
+        await peer.setLocalDescription(answer);
+
+        socket.send(JSON.stringify({message_type: MESSAGE_TYPE.answerPeerConnection, message: answer}));
       }
 
       // 6. Guest recieves a remote ICE candidate
       if (payload.message_type === MESSAGE_TYPE.newIceCandidate) {
         if (payload.message) {
           try {
-            await peerConnection.addIceCandidate(payload.message);
+            console.log(payload.message.candidate);
+            await peer.addIceCandidate(payload.message);
           } catch (e) {
             console.error('Error adding received ice candidate', e);
           }
         }
-
-        // 7. Guest detects peer connection estiblishments
-        peerConnection.addEventListener('connectionstatechange', event => {
-          if (peerConnection.connectionState === 'connected') {
-            console.log("Guest is connected to peer connection.");
-
-            // TODO: set stream here
-          }
-        });
-      }
-    }
-    
-    socket.onclose = function(event) {
-      if (event.wasClean) {
-        console.info(`[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`);
-      } else {
-        console.error('[close] Connection died');
       }
     };
-  
-    socket.onerror = function(error) {
-      console.error(error);
-      console.error(`[error]`);
-    };
     
+    attachSocketSharedHandler(socket);
     this.socket = socket;
-    return socket;
-  }
-
-  guestConn(room_id) {
-    const socket = new WebSocket(this.url, ["guest"]);
-  
-    socket.onopen = async function(e) {
-      console.log("[open] Connection established");
-      
-      await Supply(socket, "Room-Id", room_id);
-
-      // 1. Guest triggers start-peer-connection
-      this.socket.send(JSON.stringify({message_type: MESSAGE_TYPE.startPeerConnection}));
-    };
-  
-    socket.onmessage = function(event) {
-      console.log(`[owner] recieved: ${event.data}`);
-    };
-    
-    socket.onclose = function(event) {
-      if (event.wasClean) {
-        console.info(`[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`);
-      } else {
-        console.error('[close] Connection died');
-      }
-    };
-  
-    socket.onerror = function(error) {
-      console.error(error);
-      console.error(`[error]`);
-    };
-  
-    this.socket = socket;
-    return socket;
   }
 
   sendUuid() {
@@ -183,6 +178,28 @@ class WebSocketPeering {
       this.socket.send(JSON.stringify({message_type: MESSAGE_TYPE.push, message: uuidv4()}));
     }
   }
+
+  sendUuidPeer() {
+    if (this.dc !== undefined) {
+      this.dc.send(JSON.stringify({message_type: MESSAGE_TYPE.push, message: uuidv4()}));
+    }
+  }
+}
+
+// Attach socket shared handler
+function attachSocketSharedHandler(socket) {
+  socket.onclose = function(event) {
+    if (event.wasClean) {
+      console.info(`[socket close] Connection closed cleanly, code=${event.code} reason=${event.reason}`);
+    } else {
+      console.error('[socket close] Connection died');
+    }
+  };
+
+  socket.onerror = function(error) {
+    console.error(error);
+    console.error(`[error]`);
+  };
 }
 
 // Only used to communicate against match server
@@ -217,31 +234,9 @@ function Supply(conn, ask, ans) {
   });
 }
 
-// async function mediaSources(peerConnection) {
-//   const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-//   const remoteStream = new MediaStream();
-
-//   // Push tracks from local stream to peer connection
-//   localStream.getTracks().forEach((track) => {
-//     peerConnection.addTrack(track, localStream);
-//   });
-
-//   // Pull tracks from remote stream, add to video stream
-//   peerConnection.ontrack = (event) => {
-//     event.streams[0].getTracks().forEach((track) => {
-//       remoteStream.addTrack(track);
-//     });
-//   };
-
-//   // React ref
-//   // webcamVideo.srcObject = localStream;
-//   // remoteVideo.srcObject = remoteStream;
-// }
-
-export {WebSocketPeering, ICE_config};
+export default WebSocketPeering;
 
 /**
  * Usage:
- * peerConnection = new RTCPeerConnection(ICE_config);
- * wp = new WebSocketPeering(peerConnection);
+ * wsp = new WebSocketPeering(url);
  */

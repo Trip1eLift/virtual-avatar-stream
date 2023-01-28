@@ -83,7 +83,12 @@ func (c *Connections) waitRoom(room_id string) (bool, error) {
 				}
 				messageType, body, err := owner.ReadMessage()
 				if err != nil {
-					wait.Done()
+					log.Println(err)
+					c.mutex.RLock()
+					if _, found := c.index[room_id]; found == true {
+						wait.Done()
+					}
+					c.mutex.RUnlock()
 					terminate = true
 				}
 
@@ -111,6 +116,8 @@ func (c *Connections) getTarget(room_id string) (*websocket.Conn, error) {
 	c.mutex.RLock()
 	room := c.index[room_id]
 	if room == nil || room.target == nil {
+		// Not a breaking error. It happens if owner creates a room, target joins the room.
+		// Then, target not sending anything to owner, then owner leaves the room.
 		c.mutex.RUnlock()
 		err := errors.New(fmt.Sprintf("Cannot get target from room_id: %s", room_id))
 		log.Println(err.Error())
@@ -164,6 +171,7 @@ func (c *Connections) addTarget(room_id string, target *websocket.Conn) error {
 func (c *Connections) removeTarget(room_id string) error {
 	c.mutex.Lock()
 	if _, found := c.index[room_id]; found == false {
+		// Not a breaking error. It happens if owner and guest leaves the room at the same time.
 		c.mutex.Unlock()
 		err := errors.New(fmt.Sprintf("Cannot remove target from room_id: %s because it does not exist in index.", room_id))
 		log.Println(err.Error())
