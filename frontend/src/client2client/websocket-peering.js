@@ -1,10 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
 
-// WebRTC docs:   https://levelup.gitconnected.com/establishing-the-webrtc-connection-videochat-with-javascript-step-3-48d4ae0e9ea4
-// firebase docs: https://github.com/fireship-io/webrtc-firebase-demo/blob/main/main.js
-// WebRTC org:    https://webrtc.org/getting-started/peer-connections
-//                https://stackoverflow.com/questions/22470291/rtcdatachannels-readystate-is-not-open
-
 const ICE_config = {
   iceServers: [
     {
@@ -51,9 +46,15 @@ const MESSAGE_TYPE = {
 };
 
 class WebSocketPeering {
-  constructor() {
-    
+  constructor(streamVideo = false) {
     const peer = new RTCPeerConnection(ICE_config, Peer_options);
+    const remoteStream = new MediaStream();
+
+    peer.addEventListener("track", (event) => {
+      event.streams[0].getTracks().forEach((track) => {
+        remoteStream.addTrack(track);
+      });
+    })
 
     peer.ondatachannel = (event) => {
       event.channel.onmessage = (event) => {
@@ -80,6 +81,8 @@ class WebSocketPeering {
     this.socket = undefined;
     this.peer = peer;
     this.dc = datachannel;
+    this.remoteStream = remoteStream;
+    this.streamVideo = streamVideo;
   }
 
   ownerConn(url, setRoomId) {
@@ -123,7 +126,7 @@ class WebSocketPeering {
       }
     });
     
-    attachSocketSharedHandler(socket);
+    attachCommonSocketHandlers(socket);
     this.socket = socket;
   }
 
@@ -160,7 +163,7 @@ class WebSocketPeering {
       if (payload.message_type === MESSAGE_TYPE.newIceCandidate) {
         if (payload.message) {
           try {
-            console.log(payload.message.candidate);
+            // console.log(payload.message.candidate); // for debug
             await peer.addIceCandidate(payload.message);
           } catch (e) {
             console.error('Error adding received ice candidate', e);
@@ -169,8 +172,30 @@ class WebSocketPeering {
       }
     };
     
-    attachSocketSharedHandler(socket);
+    attachCommonSocketHandlers(socket);
     this.socket = socket;
+  }
+
+  onUserMedia(stream) {
+    if (this.streamVideo) {
+      // Stream audio and video
+      stream.getTracks().forEach((track) => {
+        this.peer.addTrack(track, stream);
+      });
+    } else {
+      // Stream audio only
+      stream.getAudioTracks().forEach((track) => {
+        this.peer.addTrack(track, stream);
+      });
+    }
+  }
+
+  getRemoteStream() {
+    return this.remoteStream;
+  }
+
+  boolStreamVideo() {
+    return this.streamVideo;
   }
 
   sendUuid() {
@@ -186,8 +211,8 @@ class WebSocketPeering {
   }
 }
 
-// Attach socket shared handler
-function attachSocketSharedHandler(socket) {
+// Attach common socket handlers that are used in both owner and guest
+function attachCommonSocketHandlers(socket) {
   socket.onclose = function(event) {
     if (event.wasClean) {
       console.info(`[socket close] Connection closed cleanly, code=${event.code} reason=${event.reason}`);
@@ -197,8 +222,7 @@ function attachSocketSharedHandler(socket) {
   };
 
   socket.onerror = function(error) {
-    console.error(error);
-    console.error(`[error]`);
+    console.error(`[error] ${error}`);
   };
 }
 
@@ -235,8 +259,3 @@ function Supply(conn, ask, ans) {
 }
 
 export default WebSocketPeering;
-
-/**
- * Usage:
- * wsp = new WebSocketPeering(url);
- */

@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import Webcam from 'react-webcam';
 import WebSocketPeering from './client2client/websocket-peering';
 import './App.css';
 
@@ -7,13 +8,32 @@ const url2 = "ws://localhost:5001";
 
 const remoteUrl = "wss://virtualavatar-stream.trip1elift.com/";
 
+const videoConstraints = {
+  width: 640,
+  height: 480,
+  facingMode: "user",
+};
+
+const audioConstraints = {
+  suppressLocalAudioPlayback: true,
+  noiseSuppression: true,
+  echoCancellation: true,
+};
+
 function App() {
   const [ownerRoomId, setOwnerRoomId] = useState();
   const [guestRoomId, setGuestRoomId] = useState();
-  const [wsp, setWsp] = useState();
+  const [wsp, _] = useState(new WebSocketPeering(false));
+  const webcamRef = useRef(null);
+  const remoteMedia = useRef(null);
 
   useEffect(() => {
-    setWsp(new WebSocketPeering());
+    if (typeof(remoteMedia.current) !== "undefined" && remoteMedia.current !== null) {
+      remoteMedia.current.srcObject = wsp.getRemoteStream();
+      remoteMedia.current.onloadedmetadata = function(e) {
+        remoteMedia.current.play();
+      };
+    }
   }, []);
 
   return (
@@ -32,6 +52,21 @@ function App() {
       <br/>
       <button onClick={(e)=>wsp.sendUuid()}>Send ID (websocket)</button>
       <button onClick={(e)=>wsp.sendUuidPeer()}>Send ID (peer)</button>
+      <br/>
+      <br/>
+      <Webcam
+        audio={true}
+        muted={true}
+        height={100 + "%"}
+        width={100 + "%"}
+        videoConstraints={videoConstraints}
+        audioConstraints={audioConstraints}
+        mirrored={true}
+        ref={webcamRef}
+        onUserMedia={(stream)=>wsp.onUserMedia(stream)}
+      />
+      {wsp.boolStreamVideo() && <video ref={remoteMedia} autoPlay ></video>}
+      {!wsp.boolStreamVideo() && <audio ref={remoteMedia} autoPlay></audio>}
     </div>
   );
 }
