@@ -4,7 +4,7 @@ services:
     container_name: client
     build: ./frontend
     ports:
-      - 3000:3000 # route it out of 3000 so it doesn't compete againt frontend
+      - 3001:3000 # route it out of 3000 so it doesn't compete againt frontend
     working_dir: /app
     volumes:
       - ./frontend:/app/
