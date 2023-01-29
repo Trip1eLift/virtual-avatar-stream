@@ -29,5 +29,6 @@ database_settings = {
 	DB_RETRY_BACKOFF = 60
 }
 
-frontend_origin = "http://localhost:3000"
+frontend_origin_local = "http://localhost:3000"
+frontend_origin_remote = "https://virtualavatar.trip1elift.com"
 # TODO: switch origin once in prod

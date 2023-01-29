@@ -30,7 +30,8 @@ services:
       - DB_PORT=5432
       - DB_NAME=postgres_user # default db name if not set
       - DB_RETRY_BACKOFF=1
-      - ORIGIN=http://localhost:3000
+      - ORIGIN_LOCAL=http://localhost:3000
+      - ORIGIN_REMOTE=https://virtualavatar.trip1elift.com
       - AISLE_KEY=passcode
       - SELF_IP=match1:5000
     depends_on:
@@ -53,7 +54,8 @@ services:
       - DB_PORT=5432
       - DB_NAME=postgres_user # default db name if not set
       - DB_RETRY_BACKOFF=1
-      - ORIGIN=http://localhost:3000
+      - ORIGIN_LOCAL=http://localhost:3000
+      - ORIGIN_REMOTE=https://virtualavatar.trip1elift.com
       - AISLE_KEY=passcode
       - SELF_IP=match2:5000
     depends_on:

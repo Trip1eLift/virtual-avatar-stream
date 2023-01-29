@@ -62,7 +62,12 @@ variable "database_settings" {
 	description = "settings of database"
 }
 
-variable "frontend_origin" {
+variable "frontend_origin_local" {
+	type = string
+	description = "allowed origin of frontend for websocket connections"
+}
+
+variable "frontend_origin_remote" {
 	type = string
 	description = "allowed origin of frontend for websocket connections"
 }

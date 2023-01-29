@@ -34,8 +34,8 @@ func HeaderVerify(request *http.Request) bool {
 		return false
 	}
 	if (protocol == "owner" || protocol == "guest") &&
-		(request.Header["Origin"] == nil || request.Header["Origin"][0] != os.Getenv("ORIGIN")) {
-		log.Printf("Guest/Owner origin is not [%s] but %s.\n", os.Getenv("ORIGIN"), request.Header["Origin"])
+		(request.Header["Origin"] == nil || (request.Header["Origin"][0] != os.Getenv("ORIGIN_LOCAL") && request.Header["Origin"][0] != os.Getenv("ORIGIN_REMOTE"))) {
+		log.Printf("Guest/Owner origin is not [%s] or [%s] but %s.\n", os.Getenv("ORIGIN_LOCAL"), os.Getenv("ORIGIN_REMOTE"), request.Header["Origin"])
 		return false
 	}
 

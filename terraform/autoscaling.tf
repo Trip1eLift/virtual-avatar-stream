@@ -1,6 +1,6 @@
 resource "aws_appautoscaling_target" "ecs_target" {
 	max_capacity       = 4
-	min_capacity       = 2 # TODO: change it to 1 once proxy health is checked
+	min_capacity       = 1 # TODO: change it to 1 once proxy health is checked
 	resource_id        = "service/${aws_ecs_cluster.main.name}/${aws_ecs_service.main.name}"
 	scalable_dimension = "ecs:service:DesiredCount"
 	service_namespace  = "ecs"
