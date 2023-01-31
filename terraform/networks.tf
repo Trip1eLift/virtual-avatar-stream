@@ -46,11 +46,14 @@ resource "aws_subnet" "private" {
 	tags                    = var.common_tags
 }
 
+# The architecture I have requires NAT gateway and route tables to pass ALB health checks.
+# Nat gateway:        $32.40 per month per AZ => 2 Nat gateway costs 64.8 per month
+
 resource "aws_nat_gateway" "main" {
 	count         = length(var.public_subnet_cidrs)
-  allocation_id = element(aws_eip.nat.*.id, count.index)
-  subnet_id     = element(aws_subnet.public.*.id, count.index)
-  depends_on    = [aws_internet_gateway.main]
+	allocation_id = element(aws_eip.nat.*.id, count.index)
+	subnet_id     = element(aws_subnet.public.*.id, count.index)
+	depends_on    = [aws_internet_gateway.main]
 	tags          = var.common_tags
 }
 
@@ -68,9 +71,9 @@ resource "aws_route_table" "private" {
 
 resource "aws_route" "private" {
 	count                  = length(compact(var.private_subnet_cidrs))
-  route_table_id         = element(aws_route_table.private.*.id, count.index)
-  destination_cidr_block = "0.0.0.0/0"
-  nat_gateway_id         = element(aws_nat_gateway.main.*.id, count.index)
+	route_table_id         = element(aws_route_table.private.*.id, count.index)
+	destination_cidr_block = "0.0.0.0/0"
+	nat_gateway_id         = element(aws_nat_gateway.main.*.id, count.index)
 }
 
 resource "aws_route_table_association" "private" {
