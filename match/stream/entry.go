@@ -59,7 +59,7 @@ func wsEndpoint(write http.ResponseWriter, request *http.Request) {
 }
 
 func Start() {
-	if err := DB.initializeRetry(); err != nil {
+	if err := DBW.initializeRetry(); err != nil {
 		// Two backends might try to populate table at the same time, one of them will cause an error
 		log.Println("Unable to initialize database.")
 	}
@@ -80,7 +80,16 @@ func Start() {
 
 	http.HandleFunc("/health-proxy", func(write http.ResponseWriter, _ *http.Request) {
 		self_ip, _ := IP.getIp()
-		target_ip, err := DB.fetch_an_non_self_ip(self_ip)
+
+		if ENV == "cheap" {
+			target_ip, _ := DBW.fetch_an_non_self_ip(self_ip)
+			message := fmt.Sprintf("Proxy Healthy: self IP: %s target proxy IP: %s.", self_ip, target_ip)
+			log.Print(message)
+			fmt.Fprintf(write, message)
+			return
+		}
+
+		target_ip, err := DBW.fetch_an_non_self_ip(self_ip)
 		if err != nil {
 			fmt.Fprintf(write, fmt.Sprintf("Database fetch error\n%s\n", err.Error()))
 			return
@@ -106,7 +115,7 @@ func Start() {
 	})
 
 	http.HandleFunc("/health-database", func(write http.ResponseWriter, _ *http.Request) {
-		if reply, err := DB.health_database(); err != nil {
+		if reply, err := DBW.health_database(); err != nil {
 			fmt.Fprintf(write, err.Error())
 		} else {
 			fmt.Fprintf(write, reply)

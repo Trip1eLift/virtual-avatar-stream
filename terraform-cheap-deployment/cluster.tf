@@ -18,10 +18,10 @@ resource "aws_ecs_task_definition" "main" {
 		environment = [
 			{"name": "environment",      "value": "${var.environment}"},
 			{"name": "PORT",             "value": "${tostring(var.container_port)}"},
-			{"name": "DB_HOST",          "value": "${aws_rds_cluster.main.endpoint}"},
-			{"name": "DB_USER",          "value": "${aws_rds_cluster.main.master_username}"},
-			{"name": "DB_NAME",          "value": "${aws_rds_cluster.main.database_name}"},
-			{"name": "DB_PORT",          "value": "${tostring(aws_rds_cluster.main.port)}"},
+			{"name": "DB_HOST",          "value": "no-db-host"},
+			{"name": "DB_USER",          "value": "no-db-user"},
+			{"name": "DB_NAME",          "value": "no-db-name"},
+			{"name": "DB_PORT",          "value": "no-db-port"},
 			{"name": "DB_PASS",          "value": "postgres_password"},       # TODO: use AWS secret manager later
 			{"name": "DB_RETRY_BACKOFF", "value": "${var.database_settings.DB_RETRY_BACKOFF}"},
 			{"name": "ORIGIN_LOCAL",     "value": "${var.frontend_origin_local}"},
@@ -60,7 +60,7 @@ resource "aws_ecs_service" "main" {
 	task_definition                    = aws_ecs_task_definition.main.arn
 	desired_count                      = 1
 	# deployment_minimum_healthy_percent = 100
-	# deployment_maximum_percent         = 400
+	# deployment_maximum_percent         = 200
 	launch_type                        = "FARGATE"
 	scheduling_strategy                = "REPLICA"
 	platform_version                   = "1.4.0"

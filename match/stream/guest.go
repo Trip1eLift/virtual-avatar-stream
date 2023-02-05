@@ -51,7 +51,7 @@ func HandleGuest(conn *websocket.Conn, request *http.Request) error {
 	// 3. Handle if room_id is at a different instance
 
 	// 3.1 Find target instance IP
-	owner_ip, fatal, err := DB.fetch_ip_from_room_id(room_id)
+	owner_ip, fatal, err := DBW.fetch_ip_from_room_id(room_id)
 	if err != nil {
 		if fatal == false {
 			conn.WriteMessage(websocket.CloseMessage,

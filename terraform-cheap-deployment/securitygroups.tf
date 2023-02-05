@@ -54,19 +54,3 @@ resource "aws_security_group" "ecs_service" {
 
 	tags = var.common_tags
 }
-
-resource "aws_security_group" "aurora" {
-  name        = "${var.name}-${var.environment}-aurora-sg"
-  description = "For aurora"
-  vpc_id      = aws_vpc.main.id
-
-  ingress {
-		protocol         = "tcp"
-		from_port        = var.database_settings.DB_PORT
-		to_port          = var.database_settings.DB_PORT
-		cidr_blocks      = ["0.0.0.0/0"]
-		ipv6_cidr_blocks = ["::/0"]
-	}
-
-  tags = var.common_tags
-}

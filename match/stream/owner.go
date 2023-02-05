@@ -13,7 +13,7 @@ func HandleOwner(conn *websocket.Conn, request *http.Request) error {
 	}
 
 	// 1. Retrieve an unique room_id
-	room_id, err := DB.fetch_unique_room_id()
+	room_id, err := DBW.fetch_unique_room_id()
 	if err != nil {
 		return err
 	}
@@ -23,7 +23,7 @@ func HandleOwner(conn *websocket.Conn, request *http.Request) error {
 	if err != nil {
 		return err
 	}
-	err = DB.save_room_id_with_ip(room_id, ip)
+	err = DBW.save_room_id_with_ip(room_id, ip)
 	if err != nil {
 		return err
 	}
@@ -45,7 +45,7 @@ func HandleOwner(conn *websocket.Conn, request *http.Request) error {
 	handleClose := conn.CloseHandler()
 	conn.SetCloseHandler(func(code int, text string) error {
 		ConnectionCache.removeRoom(room_id)
-		DB.remove_room_id(room_id)
+		DBW.remove_room_id(room_id)
 		return handleClose(code, text)
 	})
 

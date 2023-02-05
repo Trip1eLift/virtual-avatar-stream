@@ -20,7 +20,7 @@ func (i *Ip) setIp(ip string) {
 		self_ip := i.ip
 		i.mu.RUnlock()
 
-		DB.cleanup(self_ip) // 2 queries every 30s per tasks; 2 tasks -> 86400 query per month = 0.035$ per month
+		DBW.cleanup(self_ip) // 2 queries every 30s per tasks; 2 tasks -> 86400 query per month = 0.035$ per month
 		return
 	}
 	i.mu.RUnlock()
@@ -33,18 +33,18 @@ func (i *Ip) setIp(ip string) {
 	go func(self_ip string) {
 		// Retry 6 times - local: 6 sec - aws: 3 min
 		for i := 0; i < 6; i++ {
-			room_id, err := DB.fetch_unique_room_id()
+			room_id, err := DBW.fetch_unique_room_id()
 			if err != nil {
 				time.Sleep(time.Duration(DB.backoff) * time.Second)
 				continue
 			}
-			err = DB.save_room_id_with_ip("-"+room_id, self_ip)
+			err = DBW.save_room_id_with_ip("-"+room_id, self_ip)
 			if err != nil {
 				continue
 			}
 
 			// Cleanup outdated IPs on deployment
-			err = DB.cleanup(self_ip)
+			err = DBW.cleanup(self_ip)
 			if err == nil {
 				return
 			}

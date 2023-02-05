@@ -15,10 +15,13 @@ deploy-init:
 
 deploy:
 	cd terraform; terraform apply
-# After deployment, manually stop old tasks. The new tasks will be deployed already.
+
+destroy:
+	cd terraform; terraform apply -destroy
 
 cheap:
 	cd terraform-cheap-deployment; terraform apply
 
-destroy:
-	cd terraform; terraform apply -destroy
+cheap-destroy:
+	cd terraform-cheap-deployment; terraform apply -destroy
+
