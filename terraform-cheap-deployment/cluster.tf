@@ -49,7 +49,7 @@ resource "aws_ecs_task_definition" "main" {
 				awslogs-region        = "us-east-1"
 				awslogs-stream-prefix = "ecs"
 			}
-    	}
+    }
 	}])
 	tags = var.common_tags
 }
@@ -68,8 +68,8 @@ resource "aws_ecs_service" "main" {
 
 	network_configuration {
 		security_groups  = [ aws_security_group.ecs_service.id ]
-		subnets          = flatten(aws_subnet.private.*.id)
-		assign_public_ip = false
+		subnets          = flatten(aws_subnet.public.*.id)
+		assign_public_ip = true # an instance in a public subnet must have a public ip to communicate with www
 	}
 	
 	load_balancer {
@@ -78,8 +78,6 @@ resource "aws_ecs_service" "main" {
 		container_port   = var.container_port
 	}
 	
-	# desired_count is dynamic based on the scaling policies
-	# force update desired_count to a higher number can achieve blue/green deployment
 	lifecycle {
 		ignore_changes = [desired_count]
 	}

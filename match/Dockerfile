@@ -17,6 +17,6 @@ RUN go build -o /virtual-avatar-stream
 
 EXPOSE 5000
 
-# HEALTHCHECK CMD curl -sf http://localhost:5000/health-internal || exit 1 --health-retries=3 --health-timeout=3s --health-interval=60s --health-start-period=5s
+# HEALTHCHECK CMD curl -sf http://localhost:5000/health || exit 1 --health-retries=3 --health-timeout=3s --health-interval=60s --health-start-period=5s
 
 CMD [ "/virtual-avatar-stream" ]
