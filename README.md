@@ -1,5 +1,5 @@
 # Virtual-Avatar-Stream
-This is a PoC project to test how to deploy a scalable end-to-end streaming distributive system to support video chat.
+This is a serverless, auto-scaling, highly available, highly resilient, and highly secured backend of [virtual-avatar](https://github.com/Trip1eLift/virtual-avatar) to support client-to-client data streaming. With sufficient code change, it can turn into a serverless & scalable game server.
 
 ![Architecture Diagram](./architecture-diagram-v3.png)
 
