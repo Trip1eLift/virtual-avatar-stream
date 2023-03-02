@@ -23,7 +23,8 @@ services:
     volumes:
       - ./match:/app/
     environment:
-      - environment=cheap
+      #- environment=cheap
+      - environment=local
       - PORT=5000
       - DB_USER=postgres_user
       - DB_HOST=postgres_service
@@ -48,7 +49,8 @@ services:
     volumes:
       - ./match:/app/
     environment:
-      - environment=cheap
+      #- environment=cheap
+      - environment=local
       - PORT=5000
       - DB_USER=postgres_user
       - DB_HOST=postgres_service
